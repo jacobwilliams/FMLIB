@@ -1,0 +1,182 @@
+
+This file extends the FM_User_Manual.txt file for the files that support the FM interval arithmetic
+package.  All of these programs use the 3 basic files discussed there:
+
+1.  FMSAVE.f95        Module for FM internal global variables
+
+2.  FM.f95            Subroutine library for multiple-precision operations
+
+3.  FMZM90.f95        Modules for interfaces and definitions of derived-types
+
+These are the files included for interval arithmetic.
+
+4.  fm_interval.f95          The routines and interfaces for interval operations
+
+5.  TestFMinterval.f95       Test program for the FM interval routines
+
+6.  SampleFMinterval.f95     Small sample program using fm_interval
+
+7.  IntervalExamplesFM.f95   Code for the example interval calculations that are discussed in the
+                             paper "A Multiple-Precision Interval Arithmetic Package"
+
+
+After the first 3 files have been compiled and the program TestFM.f95 has been compiled and run
+to verify the basic FM package has been installed successfully, as shown in FM_User_Manual.txt,
+files 4 through 7 can be compiled and run.
+
+The interval arithmetic operations are made available in the user's program by putting
+       USE FM_INTERVAL_ARITHMETIC
+at the top of routines using interval arithmetic, and the multiple precision interval variables
+are declared as
+       TYPE (FM_INTERVAL)
+
+Here are sample commands to run the 3 programs in files 5, 6, and 7.  These are for the gfortran
+compiler on a Windows PC.  Macs are very similar, as are other compilers.  See FM_User_Manual.txt.
+
+
+    gfortran fm_interval.f95  -c -O3
+
+
+    gfortran TestFMinterval.f95  -c -O3
+
+    gfortran  fmsave.o  FM.o  FMZM90.o  fm_interval.o  TestFMinterval.o  -o TestFMinterval.exe
+
+    ./TestFMinterval
+
+
+    gfortran SampleFMinterval.f95  -c -O3
+
+    gfortran  fmsave.o  FM.o  FMZM90.o  fm_interval.o  SampleFMinterval.o  -o SampleFMinterval.exe
+
+    ./SampleFMinterval
+
+
+    gfortran IntervalExamplesFM.f95  -c -O3
+
+    gfortran  fmsave.o  FM.o  FMZM90.o  fm_interval.o  IntervalExamplesFM.o  -o IntervalExamplesFM.exe
+
+    ./IntervalExamplesFM
+
+
+TestFMinterval is a program that tests all the interval operations defined in the FM interval
+arithmetic package.  Run it first to make sure that the interval package has been successfully
+installed.  At the end of the run, it should say:
+
+  1044 cases tested.  No errors were found.
+
+
+SampleFMinterval is a small program showing how to do some interval calculations.  It checks a
+sum for stability and accuracy using 4 methods and compares the results:
+
+  1.  Do the sum in double precision
+  2.  Use FM with increasing precision
+  3.  Use FM with different rounding modes
+  4.  Use FM with interval arithmetic
+
+SampleFMinterval also tests a recurrence that is horribly unstable using FM vs FM interval
+arithmetic.  The results are saved in the file SampleFMinterval.out.
+
+
+IntervalExamplesFM is a program that runs the example interval calculations that are discussed
+in the paper "A Multiple-Precision Interval Arithmetic Package".  The results are saved in file
+IntervalExamplesFM.out.
+
+The program also produces 7 other output files that contain the data on how the width of the
+intervals increase at each step of the calculation for different examples in the paper.  These
+files were used to produce the graphs in the paper showing rate of increase for interval width.
+
+The basic arithmetic operations are provided, along with assignments and logical comparisons.
+Here are the functions that are available for the FM_INTERVAL type variables:
+
+ABS
+ACOS
+ACOSH
+AINT
+ANINT
+ASIN
+ASINH
+ATAN
+ATANH
+ATAN2
+BESSEL_J0
+BESSEL_J1
+BESSEL_JN
+BESSEL_Y0
+BESSEL_Y1
+BESSEL_YN
+BETA
+BINOMIAL
+CEILING
+COS
+COSH
+COS_INTEGRAL
+COSH_INTEGRAL
+DBLE
+DIGITS
+DIM
+DINT
+DOT_PRODUCT
+EPSILON
+ERF
+ERFC
+EXP
+EXPONENT
+EXP_INTEGRAL_EI
+EXP_INTEGRAL_EN
+FACTORIAL
+FLOOR
+FRACTION
+FRESNEL_C
+FRESNEL_S
+GAMMA
+HUGE
+INCOMPLETE_BETA
+INCOMPLETE_GAMMA1
+INCOMPLETE_GAMMA2
+INT
+IS_OVERFLOW
+IS_UNDERFLOW
+IS_UNKNOWN
+LEFT_ENDPOINT
+LOG
+LOG10
+LOG_ERFC
+LOG_GAMMA
+LOG_INTEGRAL
+MATMUL
+MAX
+MAXEXPONENT
+MAXVAL
+MIN
+MINEXPONENT
+MINVAL
+MOD
+MODULO
+NEAREST
+NINT
+POCHHAMMER
+POLYGAMMA
+PRECISION
+PRODUCT
+PSI
+RADIX
+RANGE
+REAL
+RIGHT_ENDPOINT
+RRSPACING
+SCALE
+SETEXPONENT
+SIGN
+SIN
+SINH
+SIN_INTEGRAL
+SINH_INTEGRAL
+SPACING
+SQRT
+SUM
+TAN
+TANH
+TO_FM
+TO_IM
+TO_ZM
+TINY

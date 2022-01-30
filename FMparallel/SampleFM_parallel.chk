@@ -1,0 +1,78 @@
+
+
+ Example 1.     1.13 seconds for   3000000 terms (non-parallel using explicit calls).  Sum =
+
+       15.49133867820057406351711346262140144713987478129118
+
+
+
+ Example 2.     0.27 seconds for   3000000 terms (parallel using explicit calls).  Sum =
+
+       15.49133867820057406351711346262140144713987478129118
+  
+
+
+ Example 3.     1.18 seconds for   3000000 terms (non-parallel using fmzm).  Sum =
+
+       15.49133867820057406351711346262140144713987478129118
+
+
+
+ Example 4.     0.29 seconds for   3000000 terms (parallel using fmzm)  Sum =
+
+       15.49133867820057406351711346262140144713987478129118
+
+
+
+ Example 5.     3.23 seconds for the heat equation using N = 30 and a 61x61 grid.
+
+ Critical time  t1 =   0.4237597655261
+
+
+
+ Example 6.  Get several approximations to t1 for different grid sizes.
+
+ N =  2  t1 =   0.3704770533853
+ N =  4  t1 =   0.4101128561049
+ N =  6  t1 =   0.4177725310247
+ N =  8  t1 =   0.4204890393155
+ N = 10  t1 =   0.4217531426529
+ N = 12  t1 =   0.4224416576260
+ N = 14  t1 =   0.4228574458342
+ N = 16  t1 =   0.4231275662427
+ N = 18  t1 =   0.4233128777883
+ N = 20  t1 =   0.4234454890749
+ N = 22  t1 =   0.4235436381929
+ N = 24  t1 =   0.4236183067653
+ N = 26  t1 =   0.4236764273189
+ N = 28  t1 =   0.4237225509610
+ N = 30  t1 =   0.4237597655261
+ N = 32  t1 =   0.4237902258226
+ N = 34  t1 =   0.4238154725518
+ N = 36  t1 =   0.4238366309395
+ N = 38  t1 =   0.4238545382679
+ N = 40  t1 =   0.4238698279699
+
+
+             Fit increasingly accurate error formulas for better accuracy.
+
+ Degree of error polynomial =  3       t1 =  .424007666051960724576969889474
+ Degree of error polynomial =  4       t1 =  .424011378076938401630403468224
+ Degree of error polynomial =  5       t1 =  .424011387707831301853239103036
+ Degree of error polynomial =  6       t1 =  .424011387020075555268971096080
+ Degree of error polynomial =  7       t1 =  .424011387035647355827128541553
+ Degree of error polynomial =  8       t1 =  .424011387033620195098553896979
+ Degree of error polynomial =  9       t1 =  .424011387033688518579825998375
+ Degree of error polynomial = 10       t1 =  .424011387033688366510439298055
+ Degree of error polynomial = 11       t1 =  .424011387033688361151733870336
+ Degree of error polynomial = 12       t1 =  .424011387033688364015742256228
+ Degree of error polynomial = 13       t1 =  .424011387033688363791866518152
+ Degree of error polynomial = 14       t1 =  .424011387033688363797581810695
+ Degree of error polynomial = 15       t1 =  .424011387033688363797435312879
+ Degree of error polynomial = 16       t1 =  .424011387033688363797432816953
+ Degree of error polynomial = 17       t1 =  .424011387033688363797432817867
+ Degree of error polynomial = 18       t1 =  .424011387033688363797432817415
+ Degree of error polynomial = 19       t1 =  .424011387033688363797432819901
+ Degree of error polynomial = 20       t1 =  .424011387033688363797432859803
+
+ As a check, subtracting this last result from the correct answer gives     8.0879045741E-25

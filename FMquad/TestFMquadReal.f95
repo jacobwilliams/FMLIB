@@ -1,0 +1,8426 @@
+
+!  This is a test program for version 1.4 of module FM_QUAD_REAL, which contains the interface
+!  routines allowing quadruple-precision real variables in the user's program to be used in
+!  assignments, arithmetic, and comparisons involving type (fm), (im), and (zm) variables.
+!  The same operations are provided as those in the basic module FMZM for single or double
+!  precision variables.
+
+!  All of the routines in module FM_QUAD_REAL are tested, and if all tests are completed
+!  successfully, this line is printed:
+
+!  512 cases tested.  No errors were found.
+
+      MODULE TEST_VARS
+
+      USE FMVALS
+      USE FMZM
+      USE FM_QUAD_REAL
+
+!             Declare the derived type variables of type (FM), (IM), and (ZM).
+!             These are in the form that would be found in a user program.
+
+      TYPE (FM), SAVE ::  M_A, MFM1, MFM2, MFM3, MFM4, MFM5, MFM6,  &
+                          MFMV1(3), MFMV2(3), MFMA(3,3), MFMB(3,3)
+
+      TYPE (IM), SAVE :: M_J,  MIM1,  MIM2,  MIM3, MIM4, MIM5
+      TYPE (IM), SAVE, DIMENSION(3)   :: MIMV1, MIMV2
+      TYPE (IM), SAVE, DIMENSION(3,3) :: MIMA2, MIMB2
+
+      TYPE (ZM), SAVE :: M_Z, MZM1, MZM2, MZM3, MZM4, MZM5,  &
+                         MZMV1(3),   MZMV2(3),               &
+                         MZMA2(3,3), MZMB2(3,3)
+
+!             These are the variables that are not multiple precision.
+
+      INTEGER, SAVE :: JV(3), JV2(3,3)
+      REAL, SAVE :: R3, RSMALL
+      REAL (QUAD_FP), SAVE :: QD1, QD2, QD3, QD4, QD5, QDS, QDV(3), QDM(3,3)
+      COMPLEX, SAVE :: C3
+      COMPLEX (QUAD_FP), SAVE :: ZQ1, ZQ2, ZQ3, ZQ4, ZQV(3), ZQM(3,3)
+
+      INTEGER, SAVE :: J, K, KLOG, KWSAVE, NCASE, NERROR
+      REAL, SAVE :: TIME1, TIME2
+
+      END MODULE TEST_VARS
+
+      MODULE TEST_A
+      USE TEST_VARS
+
+      CONTAINS
+
+      SUBROUTINE TEST1
+
+!             Test the = assignment interface.
+
+      IMPLICIT NONE
+
+      WRITE (KW,"(/' Testing the derived type = interface.')")
+
+      QDS = EPSILON(Q_ONE)*100.0
+
+      NCASE = 1
+      QD4 = MFM1
+      IF (ABS((QD4-581.21_QUAD_FP)/581.21_QUAD_FP) > QDS) CALL PRTERR(KW)
+
+      NCASE = 2
+      QD4 = MIM1
+      IF (ABS((QD4-661.0_QUAD_FP)/661.0_QUAD_FP) > QDS) CALL PRTERR(KW)
+
+      NCASE = 3
+      QD4 = MZM1
+      IF (ABS((QD4-731.51_QUAD_FP)/731.51_QUAD_FP) > QDS) CALL PRTERR(KW)
+
+      NCASE = 4
+      ZQ4 = MFM1
+      IF (ABS((ZQ4-581.21_QUAD_FP)/581.21_QUAD_FP) > QDS) CALL PRTERR(KW)
+
+      NCASE = 5
+      ZQ4 = MIM1
+      IF (ABS((ZQ4-661.0_QUAD_FP)/661.0_QUAD_FP) > QDS) CALL PRTERR(KW)
+
+      NCASE = 6
+      ZQ4 = MZM1
+      IF (ABS((ZQ4-(731.51_QUAD_FP,711.41_QUAD_FP))/(731.51_QUAD_FP,711.41_QUAD_FP)) > QDS)  &
+          CALL PRTERR(KW)
+
+      NCASE = 7
+      MFM3 = QD2
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = QDS
+      IF (FM_COMP(MFM4,'GT',MFM3)) CALL PRTERR(KW)
+
+      NCASE = 8
+      MFM3 = ZQ2
+      CALL FM_ST2M('431.11',MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = QDS
+      IF (FM_COMP(MFM4,'GT',MFM3)) CALL PRTERR(KW)
+
+      NCASE = 9
+      MFM3 = TO_FM(ZQ2)
+      CALL FM_ST2M('431.11',MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = QDS
+      IF (FM_COMP(MFM4,'GT',MFM3)) CALL PRTERR(KW)
+
+      NCASE = 10
+      MIM3 = QD2
+      CALL IM_ST2M('391',MIM4)
+      CALL IM_SUB(MIM3,MIM4,MIM5)
+      CALL IM_EQ(MIM5,MIM4)
+      CALL IM_ST2M('0',MIM3)
+      IF (IM_COMPARE(MIM4,'GT',MIM3)) CALL PRTERR(KW)
+
+      NCASE = 11
+      MIM3 = ZQ2
+      CALL IM_ST2M('431',MIM4)
+      CALL IM_SUB(MIM3,MIM4,MIM5)
+      CALL IM_EQ(MIM5,MIM4)
+      CALL IM_ST2M('0',MIM3)
+      IF (IM_COMPARE(MIM4,'GT',MIM3)) CALL PRTERR(KW)
+
+      NCASE = 12
+      MIM3 = TO_IM(ZQ2)
+      CALL IM_ST2M('431',MIM4)
+      CALL IM_SUB(MIM3,MIM4,MIM5)
+      CALL IM_EQ(MIM5,MIM4)
+      CALL IM_ST2M('0',MIM3)
+      IF (IM_COMPARE(MIM4,'GT',MIM3)) CALL PRTERR(KW)
+
+      NCASE = 13
+      MZM3 = QD2
+      CALL ZM_ST2M('391.6123456789012345678901',MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      MFM3 = QDS
+      IF (FM_COMP(MFM4,'GT',MFM3)) CALL PRTERR(KW)
+
+      NCASE = 14
+      MZM3 = ZQ2
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      MFM3 = QDS
+      IF (FM_COMP(MFM4,'GT',MFM3)) CALL PRTERR(KW)
+
+      NCASE = 15
+      MZM3 = TO_ZM(ZQ2)
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      MFM3 = QDS
+      IF (FM_COMP(MFM4,'GT',MFM3)) CALL PRTERR(KW)
+
+      END SUBROUTINE TEST1
+
+      SUBROUTINE TEST2
+
+!  Test the derived type == interface.
+
+      IMPLICIT NONE
+
+      WRITE (KW,"(/' Testing the derived type == interface.')")
+
+      NCASE = 16
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_A = QD1
+      IF (.NOT.(M_A == QD1)) THEN
+          CALL ERRPRT_FM('  ==  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 17
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_A = QD1
+      IF (.NOT.(QD1 == M_A)) THEN
+          CALL ERRPRT_FM('  ==  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 18
+      QD1 = 123
+      M_J = QD1
+      IF (.NOT.(M_J == QD1)) THEN
+          CALL ERRPRT_IM('  ==  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 19
+      QD1 = 123
+      M_J = QD1
+      IF (.NOT.(QD1 == M_J)) THEN
+          CALL ERRPRT_IM('  ==  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 20
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_Z = QD1
+      IF (.NOT.(M_Z == QD1)) THEN
+          CALL ERRPRT_ZM('  ==  ',M_Z,'M_Z',M_Z,'M_Z',M_Z,'M_Z')
+      ENDIF
+
+      NCASE = 21
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_Z = QD1
+      IF (.NOT.(QD1 == M_Z)) THEN
+          CALL ERRPRT_ZM('  ==  ',M_Z,'M_Z',M_Z,'M_Z',M_Z,'M_Z')
+      ENDIF
+
+      NCASE = 22
+      ZQ1 = 12.3
+      M_A = ZQ1
+      IF (.NOT.(M_A == ZQ1)) THEN
+          CALL ERRPRT_FM('  ==  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 23
+      ZQ1 = (12.3 , 45.6)
+      M_A = ZQ1
+      IF (M_A == ZQ1) THEN
+          CALL ERRPRT_FM('  ==  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 24
+      ZQ1 = 12.3
+      M_A = ZQ1
+      IF (.NOT.(ZQ1 == M_A)) THEN
+          CALL ERRPRT_FM('  ==  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 25
+      ZQ1 = (12.3 , 45.6)
+      M_A = ZQ1
+      IF (ZQ1 == M_A) THEN
+          CALL ERRPRT_FM('  ==  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 26
+      ZQ1 = 123
+      M_J = ZQ1
+      IF (.NOT.(M_J == ZQ1)) THEN
+          CALL ERRPRT_IM('  ==  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 27
+      ZQ1 = (123.0 , 45.6)
+      M_J = ZQ1
+      IF (M_J == ZQ1) THEN
+          CALL ERRPRT_IM('  ==  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 28
+      ZQ1 = 123
+      M_J = ZQ1
+      IF (.NOT.(ZQ1 == M_J)) THEN
+          CALL ERRPRT_IM('  ==  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 29
+      ZQ1 = (123.0 , 45.6)
+      M_J = ZQ1
+      IF (ZQ1 == M_J) THEN
+          CALL ERRPRT_IM('  ==  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 30
+      ZQ1 = (12.3 , 45.6)
+      M_Z = ZQ1
+      IF (.NOT.(M_Z == ZQ1)) THEN
+          CALL ERRPRT_ZM('  ==  ',M_Z,'M_Z',M_Z,'M_Z',M_Z,'M_Z')
+      ENDIF
+
+      NCASE = 31
+      ZQ1 = (12.3 , 45.6)
+      M_Z = ZQ1
+      IF (.NOT.(ZQ1 == M_Z)) THEN
+          CALL ERRPRT_ZM('  ==  ',M_Z,'M_Z',M_Z,'M_Z',M_Z,'M_Z')
+      ENDIF
+
+      RETURN
+      END SUBROUTINE TEST2
+
+      SUBROUTINE TEST3
+
+!  Test the derived type /= interface.
+
+      IMPLICIT NONE
+
+      WRITE (KW,"(/' Testing the derived type /= interface.')")
+
+      NCASE = 32
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_A = 1 + QD1
+      IF (.NOT.(M_A /= QD1)) THEN
+          CALL ERRPRT_FM('  /=  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 33
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_A = 1 + QD1
+      IF (.NOT.(QD1 /= M_A)) THEN
+          CALL ERRPRT_FM('  /=  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 34
+      QD1 = 123
+      M_J = 1 + QD1
+      IF (.NOT.(M_J /= QD1)) THEN
+          CALL ERRPRT_IM('  /=  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 35
+      QD1 = 123
+      M_J = 1 + QD1
+      IF (.NOT.(QD1 /= M_J)) THEN
+          CALL ERRPRT_IM('  /=  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 36
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_Z = 1 + QD1
+      IF (.NOT.(M_Z /= QD1)) THEN
+          CALL ERRPRT_ZM('  /=  ',M_Z,'M_Z',M_Z,'M_Z',M_Z,'M_Z')
+      ENDIF
+
+      NCASE = 37
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_Z = ( 12.3 , 34.5 )
+      IF (.NOT.(M_Z /= QD1)) THEN
+          CALL ERRPRT_ZM('  /=  ',M_Z,'M_Z',M_Z,'M_Z',M_Z,'M_Z')
+      ENDIF
+
+      NCASE = 38
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_Z = 1 + QD1
+      IF (.NOT.(QD1 /= M_Z)) THEN
+          CALL ERRPRT_ZM('  /=  ',M_Z,'M_Z',M_Z,'M_Z',M_Z,'M_Z')
+      ENDIF
+
+      NCASE = 39
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_Z = ( 12.3 , 34.5 )
+      IF (.NOT.(QD1 /= M_Z)) THEN
+          CALL ERRPRT_ZM('  /=  ',M_Z,'M_Z',M_Z,'M_Z',M_Z,'M_Z')
+      ENDIF
+
+      NCASE = 40
+      ZQ1 = 12.3
+      M_A = 1 + ZQ1
+      IF (.NOT.(M_A /= ZQ1)) THEN
+          CALL ERRPRT_FM('  /=  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 41
+      ZQ1 = (12.3 , 45.6)
+      M_A = (12.3 , 45.6)
+      IF (.NOT.(M_A /= ZQ1)) THEN
+          CALL ERRPRT_FM('  /=  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 42
+      ZQ1 = 12.3
+      M_A = 1 + ZQ1
+      IF (.NOT.(ZQ1 /= M_A)) THEN
+          CALL ERRPRT_FM('  /=  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 43
+      ZQ1 = (12.3 , 45.6)
+      M_A = (12.3 , 45.6)
+      IF (.NOT.(ZQ1 /= M_A)) THEN
+          CALL ERRPRT_FM('  /=  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 44
+      ZQ1 = 123
+      M_J = 1 + ZQ1
+      IF (.NOT.(M_J /= ZQ1)) THEN
+          CALL ERRPRT_IM('  /=  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 45
+      ZQ1 = (123.0 , 45.6)
+      M_J = (123.0 , 45.6)
+      IF (.NOT.(M_J /= ZQ1)) THEN
+          CALL ERRPRT_IM('  /=  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 46
+      ZQ1 = 123
+      M_J = 1 + ZQ1
+      IF (.NOT.(ZQ1 /= M_J)) THEN
+          CALL ERRPRT_IM('  /=  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 47
+      ZQ1 = (123.0 , 45.6)
+      M_J = (123.0 , 45.6)
+      IF (.NOT.(ZQ1 /= M_J)) THEN
+          CALL ERRPRT_IM('  /=  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 48
+      ZQ1 = (12.3 , 45.6)
+      M_Z = 1 + ZQ1
+      IF (.NOT.(M_Z /= ZQ1)) THEN
+          CALL ERRPRT_ZM('  /=  ',M_Z,'M_Z',M_Z,'M_Z',M_Z,'M_Z')
+      ENDIF
+
+      NCASE = 49
+      ZQ1 = (12.3 , 45.6)
+      M_Z = 1 + ZQ1
+      IF (.NOT.(ZQ1 /= M_Z)) THEN
+          CALL ERRPRT_ZM('  /=  ',M_Z,'M_Z',M_Z,'M_Z',M_Z,'M_Z')
+      ENDIF
+
+      RETURN
+      END SUBROUTINE TEST3
+
+      SUBROUTINE TEST4
+
+!  Test the derived type > interface.
+
+      IMPLICIT NONE
+
+      WRITE (KW,"(/' Testing the derived type > interface.')")
+
+      NCASE = 50
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_A = QD1 + 1
+      IF (.NOT.(M_A > QD1)) THEN
+          CALL ERRPRT_FM('   >  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 51
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_A = QD1 - 1
+      IF (.NOT.(QD1 > M_A)) THEN
+          CALL ERRPRT_FM('   >  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 52
+      QD1 = 123
+      M_J = QD1 + 1
+      IF (.NOT.(M_J > QD1)) THEN
+          CALL ERRPRT_IM('   >  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 53
+      QD1 = 123
+      M_J = QD1 - 1
+      IF (.NOT.(QD1 > M_J)) THEN
+          CALL ERRPRT_IM('   >  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      RETURN
+      END SUBROUTINE TEST4
+
+      SUBROUTINE TEST5
+
+!  Test the derived type >= interface.
+
+      IMPLICIT NONE
+
+      WRITE (KW,"(/' Testing the derived type >= interface.')")
+
+      NCASE = 54
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_A = QD1 + 1
+      IF (.NOT.(M_A >= QD1)) THEN
+          CALL ERRPRT_FM('  >=  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 55
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_A = QD1 - 1
+      IF (.NOT.(QD1 >= M_A)) THEN
+          CALL ERRPRT_FM('  >=  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 56
+      QD1 = 123
+      M_J = QD1 + 1
+      IF (.NOT.(M_J >= QD1)) THEN
+          CALL ERRPRT_IM('  >=  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 57
+      QD1 = 123
+      M_J = QD1 - 1
+      IF (.NOT.(QD1 >= M_J)) THEN
+          CALL ERRPRT_IM('  >=  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      RETURN
+      END SUBROUTINE TEST5
+
+      SUBROUTINE TEST6
+
+!  Test the derived type < interface.
+
+      IMPLICIT NONE
+
+      WRITE (KW,"(/' Testing the derived type < interface.')")
+
+      NCASE = 58
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_A = QD1 - 2
+      IF (.NOT.(M_A < QD1)) THEN
+          CALL ERRPRT_FM('   <  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 59
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_A = QD1 + 2
+      IF (.NOT.(QD1 < M_A)) THEN
+          CALL ERRPRT_FM('   <  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 60
+      QD1 = 123
+      M_J = QD1 - 2
+      IF (.NOT.(M_J < QD1)) THEN
+          CALL ERRPRT_IM('   <  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 61
+      QD1 = 123
+      M_J = QD1 + 2
+      IF (.NOT.(QD1 < M_J)) THEN
+          CALL ERRPRT_IM('   <  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      RETURN
+      END SUBROUTINE TEST6
+
+      SUBROUTINE TEST7
+
+!  Test the derived type <= interface.
+
+      IMPLICIT NONE
+
+      WRITE (KW,"(/' Testing the derived type <= interface.')")
+
+      NCASE = 62
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_A = QD1 - 2
+      IF (.NOT.(M_A <= QD1)) THEN
+          CALL ERRPRT_FM('  <=  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 63
+      QD1 = 12.345678901234567890123_QUAD_FP
+      M_A = QD1 + 2
+      IF (.NOT.(QD1 <= M_A)) THEN
+          CALL ERRPRT_FM('  <=  ',M_A,'M_A',M_A,'M_A',M_A,'M_A')
+      ENDIF
+
+      NCASE = 64
+      QD1 = 123
+      M_J = QD1 - 2
+      IF (.NOT.(M_J <= QD1)) THEN
+          CALL ERRPRT_IM('  <=  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      NCASE = 65
+      QD1 = 123
+      M_J = QD1 + 2
+      IF (.NOT.(QD1 <= M_J)) THEN
+          CALL ERRPRT_IM('  <=  ',M_J,'M_J',M_J,'M_J')
+      ENDIF
+
+      RETURN
+      END SUBROUTINE TEST7
+
+      SUBROUTINE TEST8
+
+!             Test the '+' arithmetic operator.
+
+      IMPLICIT NONE
+
+      WRITE (KW,"(/' Testing the derived type + interface.')")
+
+      QDS = EPSILON(Q_ONE)*100.0
+
+      NCASE = 66
+      MFM3 = QD2 + MFM1
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_ADD(MFM4,MFM1,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 67
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_ST2M('661',MFM3)
+      CALL FM_ADD(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = QD2 + MIM1
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 68
+      MZM3 = QD2 + MZM1
+      CALL ZM_ST2M('391.6123456789012345678901',MZM4)
+      CALL ZM_ADD(MZM4,MZM1,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 69
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_ST2M('581.21',MZM3)
+      CALL ZM_ADD(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = ZQ2 + MFM1
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 70
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_ST2M('661',MZM3)
+      CALL ZM_ADD(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = ZQ2 + MIM1
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 71
+      MZM3 = ZQ2 + MZM1
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_ADD(MZM4,MZM1,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 72
+      MFM3 = MFM1 + QD2
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_ADD(MFM1,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 73
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM3)
+      CALL ZM_ST2M('581.21',MZM4)
+      CALL ZM_ADD(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = MFM1 + ZQ2
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 74
+      CALL FM_ST2M('391.6123456789012345678901',MFM3)
+      CALL FM_ST2M('661',MFM4)
+      CALL FM_ADD(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = MIM1 + QD2
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 75
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM3)
+      CALL ZM_ST2M('661',MZM4)
+      CALL ZM_ADD(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = MIM1 + ZQ2
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 76
+      MZM3 = MZM1 + QD2
+      CALL ZM_ST2M('391.6123456789012345678901',MZM4)
+      CALL ZM_ADD(MZM1,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 77
+      MZM3 = MZM1 + ZQ2
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_ADD(MZM1,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      END SUBROUTINE TEST8
+
+      SUBROUTINE TEST9
+
+!             Test the '-' arithmetic operator.
+
+      IMPLICIT NONE
+
+      WRITE (KW,"(/' Testing the derived type - interface.')")
+
+      QDS = EPSILON(Q_ONE)*100.0
+
+      NCASE = 78
+      MFM3 = QD2 - MFM1
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_SUB(MFM4,MFM1,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 79
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_ST2M('661',MFM3)
+      CALL FM_SUB(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = QD2 - MIM1
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 80
+      MZM3 = QD2 - MZM1
+      CALL ZM_ST2M('391.6123456789012345678901',MZM4)
+      CALL ZM_SUB(MZM4,MZM1,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 81
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_ST2M('581.21',MZM3)
+      CALL ZM_SUB(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = ZQ2 - MFM1
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 82
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_ST2M('661',MZM3)
+      CALL ZM_SUB(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = ZQ2 - MIM1
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 83
+      MZM3 = ZQ2 - MZM1
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_SUB(MZM4,MZM1,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 84
+      MFM3 = MFM1 - QD2
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_SUB(MFM1,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 85
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM3)
+      CALL ZM_ST2M('581.21',MZM4)
+      CALL ZM_SUB(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = MFM1 - ZQ2
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 86
+      CALL FM_ST2M('391.6123456789012345678901',MFM3)
+      CALL FM_ST2M('661',MFM4)
+      CALL FM_SUB(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = MIM1 - QD2
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 87
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM3)
+      CALL ZM_ST2M('661',MZM4)
+      CALL ZM_SUB(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = MIM1 - ZQ2
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 88
+      MZM3 = MZM1 - QD2
+      CALL ZM_ST2M('391.6123456789012345678901',MZM4)
+      CALL ZM_SUB(MZM1,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 89
+      MZM3 = MZM1 - ZQ2
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_SUB(MZM1,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      END SUBROUTINE TEST9
+
+      END MODULE TEST_A
+
+      MODULE TEST_B
+      USE TEST_VARS
+
+      CONTAINS
+
+      SUBROUTINE TEST10
+
+!             Test the '*' arithmetic operator.
+
+      IMPLICIT NONE
+
+      WRITE (KW,"(/' Testing the derived type * interface.')")
+
+      QDS = EPSILON(Q_ONE)*100.0
+
+      NCASE = 90
+      MFM3 = QD2 * MFM1
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_MPY(MFM4,MFM1,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 91
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_ST2M('661',MFM3)
+      CALL FM_MPY(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = QD2 * MIM1
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 92
+      MZM3 = QD2 * MZM1
+      CALL ZM_ST2M('391.6123456789012345678901',MZM4)
+      CALL ZM_MPY(MZM4,MZM1,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 93
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_ST2M('581.21',MZM3)
+      CALL ZM_MPY(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = ZQ2 * MFM1
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 94
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_ST2M('661',MZM3)
+      CALL ZM_MPY(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = ZQ2 * MIM1
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 95
+      MZM3 = ZQ2 * MZM1
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_MPY(MZM4,MZM1,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 96
+      MFM3 = MFM1 * QD2
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_MPY(MFM1,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 97
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM3)
+      CALL ZM_ST2M('581.21',MZM4)
+      CALL ZM_MPY(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = MFM1 * ZQ2
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 98
+      CALL FM_ST2M('391.6123456789012345678901',MFM3)
+      CALL FM_ST2M('661',MFM4)
+      CALL FM_MPY(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = MIM1 * QD2
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 99
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM3)
+      CALL ZM_ST2M('661',MZM4)
+      CALL ZM_MPY(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = MIM1 * ZQ2
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 100
+      MZM3 = MZM1 * QD2
+      CALL ZM_ST2M('391.6123456789012345678901',MZM4)
+      CALL ZM_MPY(MZM1,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 101
+      MZM3 = MZM1 * ZQ2
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_MPY(MZM1,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      END SUBROUTINE TEST10
+
+      SUBROUTINE TEST11
+
+!             Test the '/' arithmetic operator.
+
+      IMPLICIT NONE
+
+      WRITE (KW,"(/' Testing the derived type / interface.')")
+
+      QDS = EPSILON(Q_ONE)*100.0
+
+      NCASE = 102
+      MFM3 = QD2 / MFM1
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_DIV(MFM4,MFM1,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 103
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_ST2M('661',MFM3)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = QD2 / MIM1
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 104
+      MZM3 = QD2 / MZM1
+      CALL ZM_ST2M('391.6123456789012345678901',MZM4)
+      CALL ZM_DIV(MZM4,MZM1,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 105
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_ST2M('581.21',MZM3)
+      CALL ZM_DIV(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = ZQ2 / MFM1
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 106
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_ST2M('661',MZM3)
+      CALL ZM_DIV(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = ZQ2 / MIM1
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 107
+      MZM3 = ZQ2 / MZM1
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_DIV(MZM4,MZM1,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 108
+      MFM3 = MFM1 / QD2
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_DIV(MFM1,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 109
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM3)
+      CALL ZM_ST2M('581.21',MZM4)
+      CALL ZM_DIV(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = MFM1 / ZQ2
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 110
+      CALL FM_ST2M('391.6123456789012345678901',MFM3)
+      CALL FM_ST2M('661',MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = MIM1 / QD2
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 111
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM3)
+      CALL ZM_ST2M('661',MZM4)
+      CALL ZM_DIV(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = MIM1 / ZQ2
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 112
+      MZM3 = MZM1 / QD2
+      CALL ZM_ST2M('391.6123456789012345678901',MZM4)
+      CALL ZM_DIV(MZM1,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 113
+      MZM3 = MZM1 / ZQ2
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_DIV(MZM1,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      END SUBROUTINE TEST11
+
+      SUBROUTINE TEST12
+
+!             Test the '**' arithmetic operator.
+
+      IMPLICIT NONE
+
+      WRITE (KW,"(/' Testing the derived type ** interface.')")
+
+!             Use a larger error tolerance for large exponents.
+
+      QDS = EPSILON(Q_ONE)*10000.0
+
+      NCASE = 114
+      MFM3 = QD2 ** MFM1
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_POWER(MFM4,MFM1,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 115
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_ST2M('661',MFM3)
+      CALL FM_POWER(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = QD2 ** MIM1
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 116
+      MZM3 = QD2 ** MZM1
+      CALL ZM_ST2M('391.6123456789012345678901',MZM4)
+      CALL ZM_POWER(MZM4,MZM1,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 117
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_ST2M('581.21',MZM3)
+      CALL ZM_POWER(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = ZQ2 ** MFM1
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 118
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_ST2M('661',MZM3)
+      CALL ZM_POWER(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = ZQ2 ** MIM1
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 119
+      MZM3 = ZQ2 ** MZM1
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_POWER(MZM4,MZM1,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 120
+      MFM3 = MFM1 ** QD2
+      CALL FM_ST2M('391.6123456789012345678901',MFM4)
+      CALL FM_POWER(MFM1,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 121
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM3)
+      CALL ZM_ST2M('581.21',MZM4)
+      CALL ZM_POWER(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = MFM1 ** ZQ2
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 122
+      CALL FM_ST2M('391.6123456789012345678901',MFM3)
+      CALL FM_ST2M('661',MFM4)
+      CALL FM_POWER(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = MIM1 ** QD2
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 123
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM3)
+      CALL ZM_ST2M('661',MZM4)
+      CALL ZM_POWER(MZM4,MZM3,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      MZM3 = MIM1 ** ZQ2
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 124
+      MZM3 = MZM1 ** QD2
+      CALL ZM_ST2M('391.6123456789012345678901',MZM4)
+      CALL ZM_POWER(MZM1,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      NCASE = 125
+      MZM3 = MZM1 ** ZQ2
+      CALL ZM_ST2M('431.11 + 441.21 i',MZM4)
+      CALL ZM_POWER(MZM1,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      IF (MFM4 > QDS) CALL PRTERR(KW)
+
+      END SUBROUTINE TEST12
+
+      SUBROUTINE TEST13
+
+!             Test functions TO_FM, TO_IM, TO_ZM, ..., TO_QUAD_Z.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      WRITE (KW,"(/' Testing the derived type TO_FM,  ..., TO_QUAD_Z interfaces.')")
+
+      RSMALL = EPSILON(1.0)*100.0
+      QDS = EPSILON(Q_ONE)*100.0
+
+      NCASE = 126
+      MFM3 = TO_FM(123.45_QUAD_FP)
+      CALL FMQ2M(123.45_QUAD_FP,MFM4%MFM)
+      CALL FM_SUB(MFM3,MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_DIV(MFM4,MFM3,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      CALL FM_ABS(MFM4,MFM6)
+      CALL FM_EQ(MFM6,MFM4)
+      MFM3 = QDS
+      IF (FM_COMP(MFM4,'GT',MFM3)) CALL PRTERR(KW)
+
+      NCASE = 127
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFMV1 = TO_FM(QDV)
+      MFMV2 = QDV
+      DO J = 1, 3
+         IF (ABS((MFMV1(J)-MFMV2(J))/MFMV2(J)) >= QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 128
+      QD1 = 12.1123456789_QUAD_FP
+      MFMV1 = QD1
+      MFMV2 = TO_FM('12.1123456789')
+      DO J = 1, 3
+         IF (ABS((MFMV1(J)-MFMV2(J))/MFMV2(J)) >= QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 129
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFMV1 = TO_FM(ZQV)
+      MFMV2 = ZQV
+      DO J = 1, 3
+         IF (ABS((MFMV1(J)-MFMV2(J))/MFMV2(J)) >= QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 130
+      ZQ1 = (12.1123456789_QUAD_FP,34.57_QUAD_FP)
+      MFMV1 = ZQ1
+      MFMV2 = TO_ZM('12.1123456789 + 34.57 i')
+      DO J = 1, 3
+         IF (ABS((MFMV1(J)-MFMV2(J))/MFMV2(J)) >= QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 131
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MFMA = TO_FM(QDM)
+      MFMB = QDM
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((MFMA(J,K)-MFMB(J,K))/MFMB(J,K)) >= QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 132
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MFMA = QDM(1,1)
+      MFMB = TO_FM('15.3456789')
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((MFMA(J,K)-MFMB(J,K))/MFMB(J,K)) >= QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 133
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                      SHAPE = (/ 3,3 /) )
+      MFMA = TO_FM(ZQM)
+      MFMB = ZQM
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((MFMA(J,K)-MFMB(J,K))/MFMB(J,K)) >= QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 134
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                      SHAPE = (/ 3,3 /) )
+      MFMA = ZQM(1,1)
+      MFMB = TO_FM('16.3')
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((MFMA(J,K)-MFMB(J,K))/MFMB(J,K)) >= QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 135
+      QD1 = 1.234E+23_QUAD_FP
+      MIM3 = TO_IM(QD1)
+      CALL FMQ2M(QD1,MFM4%MFM)
+      MFM5 = ABS(MIM3-MFM4)/MFM4
+      IF (MFM5 >= QDS) CALL PRTERR(KW)
+
+      NCASE = 136
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIMV1 = TO_IM(QDV)
+      MIMV2 = QDV
+      DO J = 1, 3
+         IF (.NOT.(MIMV1(J) == MIMV2(J))) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 137
+      QD1 = 12.1123456789_QUAD_FP
+      MIMV1 = QD1
+      MIMV2 = TO_IM(QD1)
+      DO J = 1, 3
+         IF (.NOT.(MIMV1(J) == MIMV2(J))) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 138
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIMV1 = TO_IM(ZQV)
+      MIMV2 = ZQV
+      DO J = 1, 3
+         IF (.NOT.(MIMV1(J) == MIMV2(J))) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 139
+      ZQ1 = (12.1123456789_QUAD_FP,34.57_QUAD_FP)
+      MIMV1 = ZQ1
+      MIMV2 = TO_IM(ZQ1)
+      DO J = 1, 3
+         IF (.NOT.(MIMV1(J) == MIMV2(J))) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 140
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MIMA2 = TO_IM(QDM)
+      MIMB2 = QDM
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (.NOT.(MIMA2(J,K) == MIMB2(J,K))) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 141
+      QD1 = 12.3456789_QUAD_FP+3
+      MIMA2 = QD1
+      MIMB2 = TO_IM(QD1)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (.NOT.(MIMA2(J,K) == MIMB2(J,K))) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 142
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                      SHAPE = (/ 3,3 /) )
+      MIMA2 = TO_IM(ZQM)
+      MIMB2 = ZQM
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (.NOT.(MIMA2(J,K) == MIMB2(J,K))) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 143
+      ZQ1 = CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7,QUAD_FP)
+      MIMA2 = ZQ1
+      MIMB2 = TO_IM(ZQ1)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (.NOT.(MIMA2(J,K) == MIMB2(J,K))) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 144
+      MZM3 = TO_ZM(123.45_QUAD_FP)
+      CALL FMQ2M(123.45_QUAD_FP,MFM4%MFM)
+      CALL FM_I2M(0,MFM5)
+      CALL ZM_COMPLEX(MFM4,MFM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      MFM3 = QDS
+      IF (FM_COMP(MFM4,'GT',MFM3)) CALL PRTERR(KW)
+
+      NCASE = 145
+      MZM3 = TO_ZM(123.45_QUAD_FP,-456.78_QUAD_FP)
+      CALL FMQ2M(123.45_QUAD_FP,MFM4%MFM)
+      CALL FMQ2M(-456.78_QUAD_FP,MFM5%MFM)
+      CALL ZM_COMPLEX(MFM4,MFM5,MZM4)
+      CALL ZM_SUB(MZM3,MZM4,MZM5)
+      CALL ZM_EQ(MZM5,MZM4)
+      CALL ZM_ABS(MZM4,MFM5)
+      CALL ZM_ABS(MZM3,MFM6)
+      CALL FM_DIV(MFM5,MFM6,MFM4)
+      MFM3 = QDS
+      IF (FM_COMP(MFM4,'GT',MFM3)) CALL PRTERR(KW)
+
+      NCASE = 146
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZMV1 = TO_ZM(QDV)
+      MZMV2 = QDV
+      DO J = 1, 3
+         IF (ABS((MZMV1(J)-MZMV2(J))/MZMV2(J)) >= QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 147
+      QD1 = 12.1123456789_QUAD_FP
+      MZMV1 = QD1
+      MZMV2 = TO_ZM(QD1)
+      DO J = 1, 3
+         IF (ABS((MZMV1(J)-MZMV2(J))/MZMV2(J)) >= QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 148
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZMV1 = TO_ZM(ZQV)
+      MZMV2 = ZQV
+      DO J = 1, 3
+         IF (ABS((MZMV1(J)-MZMV2(J))/MZMV2(J)) >= QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 149
+      ZQ1 = (12.1123456789_QUAD_FP,34.57_QUAD_FP)
+      MZMV1 = ZQ1
+      MZMV2 = TO_ZM(ZQ1)
+      DO J = 1, 3
+         IF (ABS((MZMV1(J)-MZMV2(J))/MZMV2(J)) >= QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 150
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MZMA2 = TO_ZM(QDM)
+      MZMB2 = QDM
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((MZMA2(J,K)-MZMB2(J,K))/MZMB2(J,K)) >= QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 151
+      QD1 = 12.3456789_QUAD_FP
+      MZMA2 = QD1
+      MZMB2 = TO_ZM(QD1)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((MZMA2(J,K)-MZMB2(J,K))/MZMB2(J,K)) >= QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 152
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MZMA2 = TO_ZM(ZQM)
+      MZMB2 = ZQM
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((MZMA2(J,K)-MZMB2(J,K))/MZMB2(J,K)) >= QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 153
+      ZQ1 = CMPLX(13.3_QUAD_FP+3,-22.4_QUAD_FP+7,QUAD_FP)
+      MZMA2 = ZQ1
+      MZMB2 = TO_ZM(ZQ1)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((MZMA2(J,K)-MZMB2(J,K))/MZMB2(J,K)) >= QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 154
+      CALL IMM2Q(MIM1%MIM,QD3)
+      R3 = QD3
+      IF (ABS((TO_SP(MIM1)-R3)/R3) > RSMALL) THEN
+          CALL PRTERR(KW)
+      ENDIF
+
+      NCASE = 155
+      CALL FMM2Q(MFM1%MFM,QD3)
+      IF (ABS((TO_QUAD(MFM1)-QD3)/QD3) > QDS) THEN
+          CALL PRTERR(KW)
+      ENDIF
+
+      NCASE = 156
+      CALL IMM2Q(MIM1%MIM,QD3)
+      IF (ABS((TO_QUAD(MIM1)-QD3)/QD3) > QDS) THEN
+          CALL PRTERR(KW)
+      ENDIF
+
+      NCASE = 157
+      CALL ZM_REAL(MZM1,MFM4)
+      CALL FMM2Q(MFM4%MFM,QD3)
+      IF (ABS((TO_QUAD(MZM1)-QD3)/QD3) > QDS) THEN
+          CALL PRTERR(KW)
+      ENDIF
+
+      NCASE = 158
+      CALL IMM2Q(MIM1%MIM,QD3)
+      C3 = QD3
+      IF (ABS((TO_SPZ(MIM1)-C3)/C3) > RSMALL) THEN
+          CALL PRTERR(KW)
+      ENDIF
+
+      NCASE = 159
+      CALL FMM2Q(MFM1%MFM,QD3)
+      ZQ3 = QD3
+      IF (ABS((TO_QUAD_Z(MFM1)-ZQ3)/ZQ3) > QDS) THEN
+          CALL PRTERR(KW)
+      ENDIF
+
+      NCASE = 160
+      CALL IMM2Q(MIM1%MIM,QD3)
+      ZQ3 = QD3
+      IF (ABS((TO_QUAD_Z(MIM1)-ZQ3)/ZQ3) > QDS) THEN
+          CALL PRTERR(KW)
+      ENDIF
+
+      NCASE = 161
+      CALL ZM_REAL(MZM1,MFM4)
+      CALL FMM2Q(MFM4%MFM,QD3)
+      CALL ZM_IMAG(MZM1,MFM4)
+      CALL FMM2Q(MFM4%MFM,QD4)
+      ZQ3 = CMPLX( QD3 , QD4 , QUAD_FP )
+      IF (ABS((TO_QUAD_Z(MZM1)-ZQ3)/ZQ3) > QDS) THEN
+          CALL PRTERR(KW)
+      ENDIF
+
+      NCASE = 162
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') ,  &
+                 TO_FM('56.3123456789') /)
+      QDV = TO_INT(MFMV1)
+      DO J = 1, 3
+         IF (ABS((QDV(J)-INT(MFMV1(J)))/INT(MFMV1(J))) > QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 163
+      MIMV1 = (/ TO_IM('12') , TO_IM('-34') , TO_IM('56') /)
+      QDV = TO_INT(MIMV1)
+      DO J = 1, 3
+         IF (ABS((QDV(J)-INT(MIMV1(J)))/INT(MIMV1(J))) > QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 164
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      QDV = TO_INT(MZMV1)
+      DO J = 1, 3
+         IF (ABS((QDV(J)-INT(REAL(MZMV1(J))))/INT(REAL(MZMV1(J)))) > QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 165
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      QDM = TO_INT(MFMA)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((QDM(J,K)-INT(MFMA(J,K)))/INT(MFMA(J,K))) > QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 166
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      QDM = TO_INT(MIMA2)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((QDM(J,K)-INT(MIMA2(J,K)))/INT(MIMA2(J,K))) > QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 167
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)),  &
+                               TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      QDM = TO_INT(MZMA2)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((QDM(J,K)-INT(REAL(MZMA2(J,K))))/INT(REAL(MZMA2(J,K)))) > QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 168
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') ,  &
+                 TO_FM('56.3123456789') /)
+      QDV = TO_SP(MFMV1)
+      DO J = 1, 3
+         IF (ABS((QDV(J)-MFMV1(J))/MFMV1(J)) > RSMALL) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 169
+      MIMV1 = (/ TO_IM('12') , TO_IM('-34') , TO_IM('56') /)
+      QDV = TO_SP(MIMV1)
+      DO J = 1, 3
+         IF (ABS((QDV(J)-MIMV1(J))/MIMV1(J)) > RSMALL) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 170
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      QDV = TO_SP(MZMV1)
+      DO J = 1, 3
+         IF (ABS((QDV(J)-REAL(MZMV1(J)))/REAL(MZMV1(J))) > RSMALL) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 171
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      QDM = TO_SP(MFMA)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((QDM(J,K)-MFMA(J,K))/MFMA(J,K)) > RSMALL) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 172
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      QDM = TO_SP(MIMA2)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((QDM(J,K)-MIMA2(J,K))/MIMA2(J,K)) > RSMALL) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 173
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)),  &
+                               TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      QDM = TO_SP(MZMA2)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((QDM(J,K)-REAL(MZMA2(J,K)))/REAL(MZMA2(J,K))) > RSMALL) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 174
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') ,  &
+                 TO_FM('56.3123456789') /)
+      QDV = TO_QUAD(MFMV1)
+      DO J = 1, 3
+         IF (ABS((QDV(J)-MFMV1(J))/MFMV1(J)) > QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 175
+      MIMV1 = (/ TO_IM('12') , TO_IM('-34') , TO_IM('56') /)
+      QDV = TO_QUAD(MIMV1)
+      DO J = 1, 3
+         IF (ABS((QDV(J)-MIMV1(J))/MIMV1(J)) > QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 176
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      QDV = TO_QUAD(MZMV1)
+      DO J = 1, 3
+         IF (ABS((QDV(J)-REAL(MZMV1(J)))/REAL(MZMV1(J))) > QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 177
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      QDM = TO_QUAD(MFMA)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((QDM(J,K)-MFMA(J,K))/MFMA(J,K)) > QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 178
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      QDM = TO_QUAD(MIMA2)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((QDM(J,K)-MIMA2(J,K))/MIMA2(J,K)) > QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 179
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)),  &
+                               TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      QDM = TO_QUAD(MZMA2)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((QDM(J,K)-REAL(MZMA2(J,K)))/REAL(MZMA2(J,K))) > QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 180
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') ,  &
+                 TO_FM('56.3123456789') /)
+      ZQV = TO_QUAD_Z(MFMV1)
+      DO J = 1, 3
+         IF (ABS((ZQV(J)-MFMV1(J))/MFMV1(J)) > QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 181
+      MIMV1 = (/ TO_IM('12') , TO_IM('-34') , TO_IM('56') /)
+      ZQV = TO_QUAD_Z(MIMV1)
+      DO J = 1, 3
+         IF (ABS((ZQV(J)-MIMV1(J))/MIMV1(J)) > QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 182
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      ZQV = TO_QUAD_Z(MZMV1)
+      DO J = 1, 3
+         IF (ABS((ZQV(J)-MZMV1(J))/MZMV1(J)) > QDS) THEN
+             CALL PRTERR(KW)
+             EXIT
+         ENDIF
+      ENDDO
+
+      NCASE = 183
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      ZQM = TO_QUAD_Z(MFMA)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((ZQM(J,K)-MFMA(J,K))/MFMA(J,K)) > QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 184
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      ZQM = TO_QUAD_Z(MIMA2)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((ZQM(J,K)-MIMA2(J,K))/MIMA2(J,K)) > QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      NCASE = 185
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)),  &
+                               TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      ZQM = TO_QUAD_Z(MZMA2)
+      DO J = 1, 3
+         DO K = 1, 3
+            IF (ABS((ZQM(J,K)-MZMA2(J,K))/MZMA2(J,K)) > QDS) THEN
+                CALL PRTERR(KW)
+                EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+
+      END SUBROUTINE TEST13
+
+      SUBROUTINE TEST14
+
+!             Test the derived-type interface routines that are not used elsewhere in this program.
+
+      IMPLICIT NONE
+
+      QDS = EPSILON(Q_ONE)*100.0
+
+      NCASE = 186
+      MFM3 = 123.45_QUAD_FP
+      CALL FMQ2M(123.45_QUAD_FP,MFM4%MFM)
+      IF (ABS((MFM3-MFM4)/MFM4) > QDS) CALL PRTERR(KW)
+
+      NCASE = 187
+      QD4 = MFM1
+      CALL FMM2Q(MFM1%MFM,QD5)
+      IF (ABS((QD4-QD5)/QD4) > QDS) CALL PRTERR(KW)
+
+      NCASE = 188
+      QD4 = MIM1
+      CALL IMM2Q(MIM1%MIM,QD5)
+      IF (ABS((QD4-QD5)/QD4) > QDS) CALL PRTERR(KW)
+
+      END SUBROUTINE TEST14
+
+      END MODULE TEST_B
+
+      MODULE TEST_C
+      USE TEST_VARS
+
+      CONTAINS
+
+      SUBROUTINE TEST15
+
+!  Test type (FM) array equal assignments.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      WRITE (KW,"(/' Testing derived-type array operations.')")
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+      CALL FMSETVAR(' NTRACE = 0 ')
+
+      NCASE = 189
+      MFM3 = TO_FM('234.56789')
+      QDV = MFM3
+      QD5 = 0
+      DO J = 1, 3
+         QD5 = QD5 + ABS(QDV(J) - 234.56789_QUAD_FP)
+      ENDDO
+      MFM4 = QDS*234
+      IF (.NOT.(TO_FM(QD5) <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 190
+      MFM3 = TO_FM('234.56789')
+      ZQV = MFM3
+      QD5 = 0
+      DO J = 1, 3
+         QD5 = QD5 + ABS(ZQV(J) - 234.56789_QUAD_FP)
+      ENDDO
+      MFM4 = QDS*234
+      IF (.NOT.(TO_FM(QD5) <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 191
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFMV1 = QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV1(J) - QDV(J))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 192
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFMV1 = ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV1(J) - REAL(ZQV(J),QUAD_FP))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 193
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      QDV = MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(QDV(J) - MFMV1(J))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 194
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      ZQV = MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(ZQV(J) - MFMV1(J))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST15
+
+      SUBROUTINE TEST16
+
+!  Test type (IM) array equal assignments.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 195
+      MIM1 = TO_FM('234.56789')
+      QDV = MIM1
+      QD5 = 0
+      DO J = 1, 3
+         QD5 = QD5 + ABS(QDV(J) - 234)
+      ENDDO
+      MFM4 = QDS*234
+      IF (.NOT.(TO_FM(QD5) <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 196
+      MIM1 = TO_FM('234.56789')
+      ZQV = MIM1
+      QD5 = 0
+      DO J = 1, 3
+         QD5 = QD5 + ABS(ZQV(J) - 234)
+      ENDDO
+      MFM4 = QDS*234
+      IF (.NOT.(TO_FM(QD5) <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 197
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIMV1 = QDV
+      MFM3 = 0
+      JV = QDV
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV1(J) - JV(J))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 198
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIMV1 = ZQV
+      MFM3 = 0
+      JV = ZQV
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV1(J) - JV(J))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 199
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      QDV = MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(QDV(J) - MIMV1(J))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 200
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      ZQV = MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(ZQV(J) - MIMV1(J))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST16
+
+      END MODULE TEST_C
+
+      MODULE TEST_D
+      USE TEST_VARS
+
+      CONTAINS
+
+      SUBROUTINE TEST17
+
+!  Test type (ZM) array equal assignments.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 201
+      MZM1 = TO_ZM('234.56789 - 765.765432 i')
+      QDV = MZM1
+      QD5 = 0
+      DO J = 1, 3
+         QD5 = QD5 + ABS(QDV(J) - 234.56789_QUAD_FP)
+      ENDDO
+      MFM4 = QDS*234
+      IF (.NOT.(TO_FM(QD5) <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 202
+      MZM1 = TO_ZM('234.56789 - 765.765432 i')
+      ZQV = MZM1
+      QD5 = 0
+      DO J = 1, 3
+         QD5 = QD5 + ABS(ZQV(J) - MZM1)
+      ENDDO
+      MFM4 = QDS*234
+      IF (.NOT.(TO_FM(QD5) <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 203
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZMV1 = QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV1(J) - QDV(J))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 204
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZMV1 = ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV1(J) - ZQV(J))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 205
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      QDV = MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(QDV(J) - REAL(MZMV1(J)))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 206
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      ZQV = MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(ZQV(J) - MZMV1(J))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST17
+
+      SUBROUTINE TEST18
+
+!  Test type (FM) array equal assignments.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+      CALL FMSETVAR(' NTRACE = 0 ')
+
+      NCASE = 207
+      MFM3 = TO_FM('234.56789')
+      QDM = MFM3
+      QD5 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            QD5 = QD5 + ABS(QDM(J,K) - 234.56789_QUAD_FP)
+         ENDDO
+      ENDDO
+      MFM4 = QDS*234
+      IF (.NOT.(TO_FM(QD5) <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 208
+      MFM3 = TO_FM('234.56789')
+      ZQM = MFM3
+      QD5 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            QD5 = QD5 + ABS(ZQM(J,K) - 234.56789_QUAD_FP)
+         ENDDO
+      ENDDO
+      MFM4 = QDS*234
+      IF (.NOT.(TO_FM(QD5) <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 209
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MFMA = QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMA(J,K) - QDM(J,K))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 210
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MFMA = ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMA(J,K) - REAL(ZQM(J,K),QUAD_FP))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 211
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      QDM = MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(QDM(J,K) - MFMA(J,K))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 212
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      ZQM = MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(ZQM(J,K) - MFMA(J,K))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST18
+
+      SUBROUTINE TEST19
+
+!  Test type (IM) array equal assignments.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 213
+      MIM1 = TO_FM('234.56789')
+      QDM = MIM1
+      QD5 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            QD5 = QD5 + ABS(QDM(J,K) - 234)
+         ENDDO
+      ENDDO
+      MFM4 = QDS*234
+      IF (.NOT.(TO_FM(QD5) <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 214
+      MIM1 = TO_FM('234.56789')
+      ZQM = MIM1
+      QD5 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            QD5 = QD5 + ABS(ZQM(J,K) - 234)
+         ENDDO
+      ENDDO
+      MFM4 = QDS*234
+      IF (.NOT.(TO_FM(QD5) <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 215
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MIMA2 = QDM
+      MFM3 = 0
+      JV2 = QDM
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMA2(J,K) - JV2(J,K))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 216
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MIMA2 = ZQM
+      MFM3 = 0
+      JV2 = ZQM
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMA2(J,K) - JV2(J,K))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 217
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      QDM = MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(QDM(J,K) - MIMA2(J,K))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 218
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      ZQM = MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(ZQM(J,K) - MIMA2(J,K))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST19
+
+      END MODULE TEST_D
+
+      MODULE TEST_E
+      USE TEST_VARS
+
+      CONTAINS
+
+      SUBROUTINE TEST20
+
+!  Test type (ZM) array equal assignments.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 219
+      MZM1 = TO_ZM('234.56789 - 765.765432 i')
+      QDM = MZM1
+      QD5 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            QD5 = QD5 + ABS(QDM(J,K) - 234.56789_QUAD_FP)
+         ENDDO
+      ENDDO
+      MFM4 = QDS*234
+      IF (.NOT.(TO_FM(QD5) <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 220
+      MZM1 = TO_ZM('234.56789 - 765.765432 i')
+      ZQM = MZM1
+      QD5 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            QD5 = QD5 + ABS(ZQM(J,K) - MZM1)
+         ENDDO
+      ENDDO
+      MFM4 = QDS*234
+      IF (.NOT.(TO_FM(QD5) <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 221
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MZMA2 = QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMA2(J,K) - QDM(J,K))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 222
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MZMA2 = ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMA2(J,K) - ZQM(J,K))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 223
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      QDM = MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(QDM(J,K) - REAL(MZMA2(J,K)))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 224
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      ZQM = MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(ZQM(J,K) - MZMA2(J,K))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST20
+
+      SUBROUTINE TEST21
+
+!  Test type (FM) array addition operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 225
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = 4.87_QUAD_FP + MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( 4.87_QUAD_FP + MFMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 226
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = (4.87_QUAD_FP,5.98_QUAD_FP) + MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( (4.87_QUAD_FP,5.98_QUAD_FP) + MFMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 227
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = MFMV1 + 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( MFMV1(J) + 4.87_QUAD_FP ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 228
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MFMV1 + (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MFMV1(J) + (4.87_QUAD_FP,5.98_QUAD_FP) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 229
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFM4 = TO_FM('12.1123456789')
+      MFMV2 = MFM4 + QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( MFM4 + QDV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 230
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFM4 = TO_FM('12.1123456789')
+      MZMV2 = MFM4 + ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MFM4 + ZQV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 231
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFM4 = TO_FM('12.1123456789')
+      MFMV2 = QDV + MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( QDV(J) + MFM4 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 232
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFM4 = TO_FM('12.1123456789')
+      MZMV2 = ZQV + MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) + MFM4 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST21
+
+      SUBROUTINE TEST22
+
+!  Test type (FM) array addition operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 233
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = QDV + MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( QDV(J) + MFMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 234
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = MFMV1 + QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( MFMV1(J) + QDV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 235
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = ZQV + MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) + MFMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 236
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MFMV1 + ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MFMV1(J) + ZQV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST22
+
+      SUBROUTINE TEST23
+
+!  Test type (IM) array addition operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 237
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = 4.87_QUAD_FP + MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( 4.87_QUAD_FP + MIMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 238
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = (4.87_QUAD_FP,5.98_QUAD_FP) + MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( (4.87_QUAD_FP,5.98_QUAD_FP) + MIMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 239
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = MIMV1 + 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( MIMV1(J) + 4.87_QUAD_FP ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 240
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MIMV1 + (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MIMV1(J) + (4.87_QUAD_FP,5.98_QUAD_FP) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 241
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIM2 = TO_FM('12.1123456789')
+      MIMV2 = MIM2 + QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( MIM2 + QDV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 242
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIM2 = TO_FM('12.1123456789')
+      MZMV2 = MIM2 + ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MIM2 + ZQV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 243
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIM2 = TO_FM('12.1123456789')
+      MIMV2 = QDV + MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( QDV(J) + MIM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 244
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIM2 = TO_FM('12.1123456789')
+      MZMV2 = ZQV + MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) + MIM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST23
+
+      SUBROUTINE TEST24
+
+!  Test type (IM) array addition operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 245
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = QDV + MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( QDV(J) + MIMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 246
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = MIMV1 + QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( MIMV1(J) + QDV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 247
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = ZQV + MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) + MIMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 248
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MIMV1 + ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MIMV1(J) + ZQV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST24
+
+      SUBROUTINE TEST25
+
+!  Test type (ZM) array addition operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 249
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = 4.87_QUAD_FP + MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( 4.87_QUAD_FP + MZMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 250
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = (4.87_QUAD_FP,5.98_QUAD_FP) + MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( (4.87_QUAD_FP,5.98_QUAD_FP) + MZMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 251
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 + 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) + 4.87_QUAD_FP ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 252
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 + (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) + (4.87_QUAD_FP,5.98_QUAD_FP) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 253
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = MZM2 + QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZM2 + QDV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 254
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = MZM2 + ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZM2 + ZQV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 255
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = QDV + MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( QDV(J) + MZM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 256
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = ZQV + MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) + MZM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST25
+
+      SUBROUTINE TEST26
+
+!  Test type (ZM) array addition operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 257
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = QDV + MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( QDV(J) + MZMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 258
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 + QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) + QDV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 259
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = ZQV + MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) + MZMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 260
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 + ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) + ZQV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST26
+
+      SUBROUTINE TEST27
+
+!  Test type (FM) array addition operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 261
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = 4.87_QUAD_FP + MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( 4.87_QUAD_FP + MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 262
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = (4.87_QUAD_FP,5.98_QUAD_FP) + MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( (4.87_QUAD_FP,5.98_QUAD_FP) + MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 263
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = MFMA + 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( MFMA(J,K) + 4.87_QUAD_FP ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 264
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MFMA + (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MFMA(J,K) + (4.87_QUAD_FP,5.98_QUAD_FP) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 265
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MFMB = MFM4 + QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( MFM4 + QDM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 266
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MZMB2 = MFM4 + ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MFM4 + ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 267
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MFMB = QDM + MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( QDM(J,K) + MFM4 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 268
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MZMB2 = ZQM + MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) + MFM4 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST27
+
+      SUBROUTINE TEST28
+
+!  Test type (FM) array addition operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 269
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = QDM + MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( QDM(J,K) + MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 270
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = MFMA + QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( MFMA(J,K) + QDM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 271
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = ZQM + MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) + MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 272
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MFMA + ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MFMA(J,K) + ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST28
+
+      SUBROUTINE TEST29
+
+!  Test type (IM) array addition operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 273
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = 4.87_QUAD_FP + MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( 4.87_QUAD_FP + MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 274
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = (4.87_QUAD_FP,5.98_QUAD_FP) + MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( (4.87_QUAD_FP,5.98_QUAD_FP) + MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 275
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = MIMA2 + 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( MIMA2(J,K) + 4.87_QUAD_FP ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 276
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MIMA2 + (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MIMA2(J,K) + (4.87_QUAD_FP,5.98_QUAD_FP) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 277
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MIMB2 = MIM2 + QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( MIM2 + QDM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 278
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MZMB2 = MIM2 + ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MIM2 + ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 279
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MIMB2 = QDM + MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( QDM(J,K) + MIM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 280
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MZMB2 = ZQM + MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) + MIM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST29
+
+      SUBROUTINE TEST30
+
+!  Test type (IM) array addition operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 281
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = QDM + MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( QDM(J,K) + MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 282
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = MIMA2 + QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( MIMA2(J,K) + QDM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 283
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = ZQM + MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) + MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 284
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MIMA2 + ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MIMA2(J,K) + ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST30
+
+      SUBROUTINE TEST31
+
+!  Test type (ZM) array addition operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 285
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = 4.87_QUAD_FP + MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( 4.87_QUAD_FP + MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 286
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = (4.87_QUAD_FP,5.98_QUAD_FP) + MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( (4.87_QUAD_FP,5.98_QUAD_FP) + MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 287
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 + 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) + 4.87_QUAD_FP ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 288
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 + (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) + (4.87_QUAD_FP,5.98_QUAD_FP) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 289
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = MZM2 + QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZM2 + QDM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 290
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = MZM2 + ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZM2 + ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 291
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = QDM + MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( QDM(J,K) + MZM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 292
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = ZQM + MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) + MZM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST31
+
+      END MODULE TEST_E
+
+      MODULE TEST_F
+      USE TEST_VARS
+
+      CONTAINS
+
+      SUBROUTINE TEST32
+
+!  Test type (ZM) array addition operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 293
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = QDM + MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( QDM(J,K) + MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 294
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 + QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) + QDM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 295
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = ZQM + MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) + MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 296
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 + ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) + ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST32
+
+      SUBROUTINE TEST33
+
+!  Test type (FM) array subtraction operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 297
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = 4.87_QUAD_FP - MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( 4.87_QUAD_FP - MFMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 298
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = (4.87_QUAD_FP,5.98_QUAD_FP) - MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( (4.87_QUAD_FP,5.98_QUAD_FP) - MFMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 299
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = MFMV1 - 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( MFMV1(J) - 4.87_QUAD_FP ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 300
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MFMV1 - (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MFMV1(J) - (4.87_QUAD_FP,5.98_QUAD_FP) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 301
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFM4 = TO_FM('12.1123456789')
+      MFMV2 = MFM4 - QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( MFM4 - QDV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 302
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFM4 = TO_FM('12.1123456789')
+      MZMV2 = MFM4 - ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MFM4 - ZQV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 303
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFM4 = TO_FM('12.1123456789')
+      MFMV2 = QDV - MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( QDV(J) - MFM4 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 304
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFM4 = TO_FM('12.1123456789')
+      MZMV2 = ZQV - MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) - MFM4 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST33
+
+      SUBROUTINE TEST34
+
+!  Test type (FM) array subtraction operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 305
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = QDV - MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( QDV(J) - MFMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 306
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = MFMV1 - QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( MFMV1(J) - QDV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 307
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = ZQV - MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) - MFMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 308
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MFMV1 - ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MFMV1(J) - ZQV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST34
+
+      SUBROUTINE TEST35
+
+!  Test type (IM) array subtraction operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 309
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = 4.87_QUAD_FP - MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( 4.87_QUAD_FP - MIMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 310
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = (4.87_QUAD_FP,5.98_QUAD_FP) - MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( (4.87_QUAD_FP,5.98_QUAD_FP) - MIMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 311
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = MIMV1 - 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( MIMV1(J) - 4.87_QUAD_FP ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 312
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MIMV1 - (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MIMV1(J) - (4.87_QUAD_FP,5.98_QUAD_FP) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 313
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIM2 = TO_FM('12.1123456789')
+      MIMV2 = MIM2 - QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( MIM2 - QDV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 314
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIM2 = TO_FM('12.1123456789')
+      MZMV2 = MIM2 - ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MIM2 - ZQV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 315
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIM2 = TO_FM('12.1123456789')
+      MIMV2 = QDV - MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( QDV(J) - MIM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 316
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIM2 = TO_FM('12.1123456789')
+      MZMV2 = ZQV - MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) - MIM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST35
+
+      SUBROUTINE TEST36
+
+!  Test type (IM) array subtraction operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 317
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = QDV - MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( QDV(J) - MIMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 318
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = MIMV1 - QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( MIMV1(J) - QDV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 319
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = ZQV - MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) - MIMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 320
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MIMV1 - ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MIMV1(J) - ZQV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST36
+
+      SUBROUTINE TEST37
+
+!  Test type (ZM) array subtraction operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 321
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = 4.87_QUAD_FP - MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( 4.87_QUAD_FP - MZMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 322
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = (4.87_QUAD_FP,5.98_QUAD_FP) - MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( (4.87_QUAD_FP,5.98_QUAD_FP) - MZMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 323
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 - 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) - 4.87_QUAD_FP ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 324
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 - (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) - (4.87_QUAD_FP,5.98_QUAD_FP) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 325
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = MZM2 - QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZM2 - QDV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 326
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = MZM2 - ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZM2 - ZQV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 327
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = QDV - MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( QDV(J) - MZM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 328
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = ZQV - MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) - MZM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST37
+
+      SUBROUTINE TEST38
+
+!  Test type (ZM) array subtraction operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 329
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = QDV - MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( QDV(J) - MZMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 330
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 - QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) - QDV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 331
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = ZQV - MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) - MZMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 332
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 - ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) - ZQV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST38
+
+      SUBROUTINE TEST39
+
+!  Test type (FM) array subtraction operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 333
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = 4.87_QUAD_FP - MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( 4.87_QUAD_FP - MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 334
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = (4.87_QUAD_FP,5.98_QUAD_FP) - MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( (4.87_QUAD_FP,5.98_QUAD_FP) - MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 335
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = MFMA - 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( MFMA(J,K) - 4.87_QUAD_FP ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 336
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MFMA - (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MFMA(J,K) - (4.87_QUAD_FP,5.98_QUAD_FP) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 337
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MFMB = MFM4 - QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( MFM4 - QDM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 338
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MZMB2 = MFM4 - ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MFM4 - ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 339
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MFMB = QDM - MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( QDM(J,K) - MFM4 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 340
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MZMB2 = ZQM - MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) - MFM4 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST39
+
+      SUBROUTINE TEST40
+
+!  Test type (FM) array subtraction operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 341
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = QDM - MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( QDM(J,K) - MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 342
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = MFMA - QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( MFMA(J,K) - QDM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 343
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = ZQM - MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) - MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 344
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MFMA - ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MFMA(J,K) - ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST40
+
+      SUBROUTINE TEST41
+
+!  Test type (IM) array subtraction operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 345
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = 4.87_QUAD_FP - MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( 4.87_QUAD_FP - MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 346
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = (4.87_QUAD_FP,5.98_QUAD_FP) - MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( (4.87_QUAD_FP,5.98_QUAD_FP) - MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 347
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = MIMA2 - 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( MIMA2(J,K) - 4.87_QUAD_FP ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 348
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MIMA2 - (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MIMA2(J,K) - (4.87_QUAD_FP,5.98_QUAD_FP) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 349
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MIMB2 = MIM2 - QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( MIM2 - QDM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 350
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MZMB2 = MIM2 - ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MIM2 - ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 351
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MIMB2 = QDM - MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( QDM(J,K) - MIM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 352
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MZMB2 = ZQM - MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) - MIM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST41
+
+      SUBROUTINE TEST42
+
+!  Test type (IM) array subtraction operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 353
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = QDM - MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( QDM(J,K) - MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 354
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = MIMA2 - QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( MIMA2(J,K) - QDM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 355
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = ZQM - MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) - MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 356
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MIMA2 - ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MIMA2(J,K) - ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST42
+
+      SUBROUTINE TEST43
+
+!  Test type (ZM) array subtraction operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 357
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = 4.87_QUAD_FP - MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( 4.87_QUAD_FP - MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 358
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = (4.87_QUAD_FP,5.98_QUAD_FP) - MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( (4.87_QUAD_FP,5.98_QUAD_FP) - MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 359
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 - 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) - 4.87_QUAD_FP ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 360
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 - (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) - (4.87_QUAD_FP,5.98_QUAD_FP) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 361
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = MZM2 - QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZM2 - QDM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 362
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = MZM2 - ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZM2 - ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 363
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = QDM - MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( QDM(J,K) - MZM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 364
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = ZQM - MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) - MZM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST43
+
+      END MODULE TEST_F
+
+      MODULE TEST_G
+      USE TEST_VARS
+
+      CONTAINS
+
+      SUBROUTINE TEST44
+
+!  Test type (ZM) array subtraction operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 365
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = QDM - MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( QDM(J,K) - MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 366
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 - QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) - QDM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 367
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = ZQM - MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) - MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 368
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 - ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) - ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST44
+
+      SUBROUTINE TEST45
+
+!  Test type (FM) array multiplication operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 369
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = 4.87_QUAD_FP * MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( 4.87_QUAD_FP * MFMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 370
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = (4.87_QUAD_FP,5.98_QUAD_FP) * MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( (4.87_QUAD_FP,5.98_QUAD_FP) * MFMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 371
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = MFMV1 * 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( MFMV1(J) * 4.87_QUAD_FP ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 372
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MFMV1 * (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MFMV1(J) * (4.87_QUAD_FP,5.98_QUAD_FP) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 373
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFM4 = TO_FM('12.1123456789')
+      MFMV2 = MFM4 * QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( MFM4 * QDV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 374
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFM4 = TO_FM('12.1123456789')
+      MZMV2 = MFM4 * ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MFM4 * ZQV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 375
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFM4 = TO_FM('12.1123456789')
+      MFMV2 = QDV * MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( QDV(J) * MFM4 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 376
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFM4 = TO_FM('12.1123456789')
+      MZMV2 = ZQV * MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) * MFM4 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST45
+
+      SUBROUTINE TEST46
+
+!  Test type (FM) array multiplication operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 377
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = QDV * MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( QDV(J) * MFMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 378
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = MFMV1 * QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( MFMV1(J) * QDV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 379
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = ZQV * MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) * MFMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 380
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MFMV1 * ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MFMV1(J) * ZQV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST46
+
+      SUBROUTINE TEST47
+
+!  Test type (IM) array multiplication operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 381
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = 4.87_QUAD_FP * MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( 4.87_QUAD_FP * MIMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 382
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = (4.87_QUAD_FP,5.98_QUAD_FP) * MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( (4.87_QUAD_FP,5.98_QUAD_FP) * MIMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 383
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = MIMV1 * 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( MIMV1(J) * 4.87_QUAD_FP ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 384
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MIMV1 * (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MIMV1(J) * (4.87_QUAD_FP,5.98_QUAD_FP) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 385
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIM2 = TO_FM('12.1123456789')
+      MIMV2 = MIM2 * QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( MIM2 * QDV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 386
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIM2 = TO_FM('12.1123456789')
+      MZMV2 = MIM2 * ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MIM2 * ZQV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 387
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIM2 = TO_FM('12.1123456789')
+      MIMV2 = QDV * MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( QDV(J) * MIM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 388
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIM2 = TO_FM('12.1123456789')
+      MZMV2 = ZQV * MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) * MIM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST47
+
+      SUBROUTINE TEST48
+
+!  Test type (IM) array multiplication operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 389
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = QDV * MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( QDV(J) * MIMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 390
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = MIMV1 * QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( MIMV1(J) * QDV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 391
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = ZQV * MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) * MIMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 392
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MIMV1 * ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MIMV1(J) * ZQV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST48
+
+      SUBROUTINE TEST49
+
+!  Test type (ZM) array multiplication operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 393
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = 4.87_QUAD_FP * MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( 4.87_QUAD_FP * MZMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 394
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = (4.87_QUAD_FP,5.98_QUAD_FP) * MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( (4.87_QUAD_FP,5.98_QUAD_FP) * MZMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 395
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 * 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) * 4.87_QUAD_FP ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 396
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 * (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) * (4.87_QUAD_FP,5.98_QUAD_FP) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 397
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = MZM2 * QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZM2 * QDV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 398
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = MZM2 * ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZM2 * ZQV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 399
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = QDV * MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( QDV(J) * MZM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 400
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = ZQV * MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) * MZM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST49
+
+      SUBROUTINE TEST50
+
+!  Test type (ZM) array multiplication operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 401
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = QDV * MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( QDV(J) * MZMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 402
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 * QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) * QDV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 403
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = ZQV * MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) * MZMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 404
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 * ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) * ZQV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST50
+
+      SUBROUTINE TEST51
+
+!  Test type (FM) array multiplication operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 405
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = 4.87_QUAD_FP * MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( 4.87_QUAD_FP * MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 406
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = (4.87_QUAD_FP,5.98_QUAD_FP) * MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( (4.87_QUAD_FP,5.98_QUAD_FP) * MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 407
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = MFMA * 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( MFMA(J,K) * 4.87_QUAD_FP ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 408
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MFMA * (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MFMA(J,K) * (4.87_QUAD_FP,5.98_QUAD_FP) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 409
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MFMB = MFM4 * QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( MFM4 * QDM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 410
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MZMB2 = MFM4 * ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MFM4 * ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 411
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MFMB = QDM * MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( QDM(J,K) * MFM4 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 412
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MZMB2 = ZQM * MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) * MFM4 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST51
+
+      SUBROUTINE TEST52
+
+!  Test type (FM) array multiplication operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 413
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = QDM * MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( QDM(J,K) * MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 414
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = MFMA * QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( MFMA(J,K) * QDM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 415
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = ZQM * MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) * MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 416
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MFMA * ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MFMA(J,K) * ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST52
+
+      SUBROUTINE TEST53
+
+!  Test type (IM) array multiplication operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 417
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = 4.87_QUAD_FP * MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( 4.87_QUAD_FP * MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 418
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = (4.87_QUAD_FP,5.98_QUAD_FP) * MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( (4.87_QUAD_FP,5.98_QUAD_FP) * MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 419
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = MIMA2 * 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( MIMA2(J,K) * 4.87_QUAD_FP ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 420
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MIMA2 * (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MIMA2(J,K) * (4.87_QUAD_FP,5.98_QUAD_FP) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 421
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MIMB2 = MIM2 * QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( MIM2 * QDM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 422
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MZMB2 = MIM2 * ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MIM2 * ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 423
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MIMB2 = QDM * MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( QDM(J,K) * MIM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 424
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MZMB2 = ZQM * MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) * MIM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST53
+
+      SUBROUTINE TEST54
+
+!  Test type (IM) array multiplication operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 425
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = QDM * MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( QDM(J,K) * MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 426
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = MIMA2 * QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( MIMA2(J,K) * QDM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 427
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = ZQM * MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) * MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 428
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MIMA2 * ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MIMA2(J,K) * ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST54
+
+      SUBROUTINE TEST55
+
+!  Test type (ZM) array multiplication operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 429
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = 4.87_QUAD_FP * MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( 4.87_QUAD_FP * MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 430
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = (4.87_QUAD_FP,5.98_QUAD_FP) * MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( (4.87_QUAD_FP,5.98_QUAD_FP) * MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 431
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 * 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) * 4.87_QUAD_FP ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 432
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 * (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) * (4.87_QUAD_FP,5.98_QUAD_FP) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 433
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = MZM2 * QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZM2 * QDM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 434
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = MZM2 * ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZM2 * ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 435
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = QDM * MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( QDM(J,K) * MZM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 436
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = ZQM * MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) * MZM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST55
+
+      SUBROUTINE TEST56
+
+!  Test type (ZM) array multiplication operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 437
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = QDM * MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( QDM(J,K) * MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 438
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 * QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) * QDM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 439
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = ZQM * MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) * MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 440
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 * ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) * ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST56
+
+      END MODULE TEST_G
+
+      MODULE TEST_H
+      USE TEST_VARS
+
+      CONTAINS
+
+      SUBROUTINE TEST57
+
+!  Test type (FM) array division operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 441
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = 4.87_QUAD_FP / MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( 4.87_QUAD_FP / MFMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 442
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = (4.87_QUAD_FP,5.98_QUAD_FP) / MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( (4.87_QUAD_FP,5.98_QUAD_FP) / MFMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 443
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = MFMV1 / 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( MFMV1(J) / 4.87_QUAD_FP ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 444
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MFMV1 / (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MFMV1(J) / (4.87_QUAD_FP,5.98_QUAD_FP) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 445
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFM4 = TO_FM('12.1123456789')
+      MFMV2 = MFM4 / QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( MFM4 / QDV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 446
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFM4 = TO_FM('12.1123456789')
+      MZMV2 = MFM4 / ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MFM4 / ZQV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 447
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFM4 = TO_FM('12.1123456789')
+      MFMV2 = QDV / MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( QDV(J) / MFM4 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 448
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFM4 = TO_FM('12.1123456789')
+      MZMV2 = ZQV / MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) / MFM4 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST57
+
+      SUBROUTINE TEST58
+
+!  Test type (FM) array division operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 449
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = QDV / MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( QDV(J) / MFMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 450
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MFMV2 = MFMV1 / QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MFMV2(J) - ( MFMV1(J) / QDV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 451
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = ZQV / MFMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) / MFMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 452
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MFMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MFMV1 / ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MFMV1(J) / ZQV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST58
+
+      SUBROUTINE TEST59
+
+!  Test type (IM) array division operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 453
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = 4.87_QUAD_FP / MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( 4.87_QUAD_FP / MIMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 454
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = (4.87_QUAD_FP,5.98_QUAD_FP) / MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( (4.87_QUAD_FP,5.98_QUAD_FP) / MIMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 455
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = MIMV1 / 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( MIMV1(J) / 4.87_QUAD_FP ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 456
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MIMV1 / (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MIMV1(J) / (4.87_QUAD_FP,5.98_QUAD_FP) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 457
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIM2 = TO_FM('12.1123456789')
+      MIMV2 = MIM2 / QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( MIM2 / QDV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 458
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIM2 = TO_FM('12.1123456789')
+      MZMV2 = MIM2 / ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MIM2 / ZQV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 459
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIM2 = TO_FM('12.1123456789')
+      MIMV2 = QDV / MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( QDV(J) / MIM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 460
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIM2 = TO_FM('12.1123456789')
+      MZMV2 = ZQV / MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) / MIM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST59
+
+      SUBROUTINE TEST60
+
+!  Test type (IM) array division operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 461
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = QDV / MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( QDV(J) / MIMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 462
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MIMV2 = MIMV1 / QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MIMV2(J) - INT( MIMV1(J) / QDV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 463
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = ZQV / MIMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) / MIMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 464
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MIMV1 = (/ TO_FM('12.1123456789') , TO_FM('-34.2123456789') , TO_FM('56.3123456789') /)
+      MZMV2 = MIMV1 / ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MIMV1(J) / ZQV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST60
+
+      SUBROUTINE TEST61
+
+!  Test type (ZM) array division operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 465
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = 4.87_QUAD_FP / MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( 4.87_QUAD_FP / MZMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 466
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = (4.87_QUAD_FP,5.98_QUAD_FP) / MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( (4.87_QUAD_FP,5.98_QUAD_FP) / MZMV1(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 467
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 / 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) / 4.87_QUAD_FP ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 468
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 / (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) / (4.87_QUAD_FP,5.98_QUAD_FP) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 469
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = MZM2 / QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZM2 / QDV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 470
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = MZM2 / ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZM2 / ZQV(J) ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 471
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = QDV / MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( QDV(J) / MZM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 472
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMV2 = ZQV / MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) / MZM2 ))
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST61
+
+      SUBROUTINE TEST62
+
+!  Test type (ZM) array division operations.
+
+      IMPLICIT NONE
+      INTEGER :: J
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 473
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = QDV / MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( QDV(J) / MZMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 474
+      QDV = (/ 12.1123456789_QUAD_FP, -34.2123456789_QUAD_FP, 56.3123456789_QUAD_FP /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 / QDV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) / QDV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 475
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = ZQV / MZMV1
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( ZQV(J) / MZMV1(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 476
+      ZQV = (/ (12.1123456789_QUAD_FP,34.57_QUAD_FP) , (-34.2123456789_QUAD_FP,987.43_QUAD_FP) ,  &
+               (56.3123456789_QUAD_FP,-465.84_QUAD_FP) /)
+      MZMV1 = (/ TO_ZM('12.1123456789 + 9.574635 i') , TO_ZM('-34.2123456789 - 5.4 i') ,  &
+                 TO_ZM('56.3123456789 + 0.000345 i') /)
+      MZMV2 = MZMV1 / ZQV
+      MFM3 = 0
+      DO J = 1, 3
+         MFM3 = MFM3 + ABS(MZMV2(J) - ( MZMV1(J) / ZQV(J) ))
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST62
+
+      SUBROUTINE TEST63
+
+!  Test type (FM) array division operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 477
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = 4.87_QUAD_FP / MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( 4.87_QUAD_FP / MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 478
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = (4.87_QUAD_FP,5.98_QUAD_FP) / MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( (4.87_QUAD_FP,5.98_QUAD_FP) / MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 479
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = MFMA / 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( MFMA(J,K) / 4.87_QUAD_FP ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 480
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MFMA / (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MFMA(J,K) / (4.87_QUAD_FP,5.98_QUAD_FP) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 481
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MFMB = MFM4 / QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( MFM4 / QDM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 482
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MZMB2 = MFM4 / ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MFM4 / ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 483
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MFMB = QDM / MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( QDM(J,K) / MFM4 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 484
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MFM4 = TO_FM('12.1123456789')
+      MZMB2 = ZQM / MFM4
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) / MFM4 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST63
+
+      SUBROUTINE TEST64
+
+!  Test type (FM) array division operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 485
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = QDM / MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( QDM(J,K) / MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 486
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MFMB = MFMA / QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MFMB(J,K) - ( MFMA(J,K) / QDM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 487
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = ZQM / MFMA
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) / MFMA(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 488
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MFMA(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MFMA / ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MFMA(J,K) / ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST64
+
+      SUBROUTINE TEST65
+
+!  Test type (IM) array division operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 489
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = 412345.87_QUAD_FP / MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( 412345.87_QUAD_FP / MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 490
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = (4.87_QUAD_FP,5.98_QUAD_FP) / MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( (4.87_QUAD_FP,5.98_QUAD_FP) / MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 491
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = MIMA2 / 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( MIMA2(J,K) / 4.87_QUAD_FP ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 492
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MIMA2 / (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MIMA2(J,K) / (4.87_QUAD_FP,5.98_QUAD_FP) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 493
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MIMB2 = MIM2 / QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( MIM2 / QDM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 494
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MZMB2 = MIM2 / ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MIM2 / ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 495
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MIMB2 = QDM / MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( QDM(J,K) / MIM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 496
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MIM2 = TO_FM('12.1123456789')
+      MZMB2 = ZQM / MIM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) / MIM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST65
+
+      SUBROUTINE TEST66
+
+!  Test type (IM) array division operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 497
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = QDM / MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( QDM(J,K) / MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 498
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MIMB2 = MIMA2 / QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MIMB2(J,K) - INT( MIMA2(J,K) / QDM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 499
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = ZQM / MIMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) / MIMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 500
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MIMA2(J,K) = TO_FM(25+3*(J+3*(K-1)))/3
+         ENDDO
+      ENDDO
+      MZMB2 = MIMA2 / ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MIMA2(J,K) / ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST66
+
+      SUBROUTINE TEST67
+
+!  Test type (ZM) array division operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 501
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = 4.87_QUAD_FP / MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( 4.87_QUAD_FP / MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 502
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = (4.87_QUAD_FP,5.98_QUAD_FP) / MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( (4.87_QUAD_FP,5.98_QUAD_FP) / MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 503
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 / 4.87_QUAD_FP
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) / 4.87_QUAD_FP ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 504
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 / (4.87_QUAD_FP,5.98_QUAD_FP)
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) / (4.87_QUAD_FP,5.98_QUAD_FP) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 505
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = MZM2 / QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZM2 / QDM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 506
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = MZM2 / ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZM2 / ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 507
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = QDM / MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( QDM(J,K) / MZM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 508
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      MZM2 = TO_ZM('12.1123456789 - 53.837465 i')
+      MZMB2 = ZQM / MZM2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) / MZM2 ))
+         ENDDO
+      ENDDO
+      MFM4 = QDS*56*3
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST67
+
+      SUBROUTINE TEST68
+
+!  Test type (ZM) array division operations.
+
+      IMPLICIT NONE
+      INTEGER :: J, K
+
+      KWSAVE = KW
+      CALL FMSETVAR(' KW = 22 ')
+
+      NCASE = 509
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = QDM / MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( QDM(J,K) / MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 510
+      QDM = RESHAPE( (/(12.3456789_QUAD_FP+3*J,J=1,9)/) , SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 / QDM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) / QDM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 511
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = ZQM / MZMA2
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( ZQM(J,K) / MZMA2(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      NCASE = 512
+      ZQM = RESHAPE( (/(CMPLX(13.3_QUAD_FP+3*J,-22.4_QUAD_FP+7*J,QUAD_FP),J=1,9)/) ,  &
+                     SHAPE = (/ 3,3 /) )
+      DO J = 1, 3
+         DO K = 1, 3
+            MZMA2(J,K) = CMPLX(TO_FM('62.3')+3*(J+3*(K-1)), TO_FM('-72.4')+7*(J+3*(K-1)))
+         ENDDO
+      ENDDO
+      MZMB2 = MZMA2 / ZQM
+      MFM3 = 0
+      DO J = 1, 3
+         DO K = 1, 3
+            MFM3 = MFM3 + ABS(MZMB2(J,K) - ( MZMA2(J,K) / ZQM(J,K) ))
+         ENDDO
+      ENDDO
+      CALL FM_ST2M(' 1.0E-45 ',MFM4)
+      IF (.NOT.(MFM3 <= MFM4)) THEN
+          CALL PRTERR(KWSAVE)
+      ENDIF
+
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE TEST68
+
+      END MODULE TEST_H
+
+
+
+      PROGRAM TEST
+
+      USE TEST_VARS
+      USE TEST_A
+      USE TEST_B
+      USE TEST_C
+      USE TEST_D
+      USE TEST_E
+      USE TEST_F
+      USE TEST_G
+      USE TEST_H
+      IMPLICIT NONE
+
+!             Write output to the standard FM output (unit KW, defined in subroutine FMSET),
+!             and also to the file TestFMquadReal.out.
+
+      KLOG = 18
+      OPEN (KLOG,FILE='TestFMquadReal.out')
+      KWSAVE = KW
+      KW = KLOG
+
+!             Set precision to give at least 50 significant digits and initialize the FM package.
+!             This call also checks many of the initialization values used in module FMVALS
+!             (file FMSAVE.f95).  Set KW = KLOG for this call so that any messages concerning these
+!             values will appear in file TestFMquadReal.out.
+
+      CALL FM_SET(50)
+      KW = KWSAVE
+
+!             Write output for testing error messages to the file FMerrmsgQR.OUT.
+
+      OPEN (22,FILE='FMerrmsgQR.OUT')
+      WRITE (22,*) ' '
+      WRITE (22,*) ' This file is produced by the TestFMquadReal program while testing'
+      WRITE (22,*) ' error messages and trace output options.'
+      WRITE (22,*) ' '
+      KW = 22
+      CALL FMVARS
+      WRITE (KW,*) ' RADIX(1.0_QUAD_FP) = ',RADIX(1.0_QUAD_FP),  &
+                   '    DIGITS(1.0_QUAD_FP) = ',DIGITS(1.0_QUAD_FP)
+      WRITE (KW,*) '    HUGE(1.0_QUAD_FP)    = ',HUGE(1.0_QUAD_FP)
+      WRITE (KW,*) '    TINY(1.0_QUAD_FP)    = ',TINY(1.0_QUAD_FP)
+      WRITE (KW,*) '    EPSILON(1.0_QUAD_FP) = ',EPSILON(1.0_QUAD_FP)
+      KW = KWSAVE
+
+      CALL CPU_TIME(TIME1)
+
+!             Initialize some of the test variables.
+
+      QD2 = 391.6123456789012345678901_QUAD_FP
+      ZQ2 = ( 431.11_QUAD_FP , 441.21_QUAD_FP )
+      CALL FM_ST2M('581.21',MFM1)
+      CALL FM_ST2M('-572.42',MFM2)
+      CALL IM_ST2M('661',MIM1)
+      CALL IM_ST2M('-602',MIM2)
+      CALL ZM_ST2M('731.51 + 711.41 i',MZM1)
+      CALL ZM_ST2M('-762.12 - 792.42 i',MZM2)
+
+!             NERROR is the number of errors found.
+
+      NERROR = 0
+
+!             Test the derived type = interface.
+
+      CALL TEST1
+
+!             Test the derived type == interface.
+
+      CALL TEST2
+
+!             Test the derived type /= interface.
+
+      CALL TEST3
+
+!             Test the derived type > interface.
+
+      CALL TEST4
+
+!             Test the derived type >= interface.
+
+      CALL TEST5
+
+!             Test the derived type < interface.
+
+      CALL TEST6
+
+!             Test the derived type <= interface.
+
+      CALL TEST7
+
+!             Test the derived type + interface.
+
+      CALL TEST8
+
+!             Test the derived type - interface.
+
+      CALL TEST9
+
+!             Test the derived type * interface.
+
+      CALL TEST10
+
+!             Test the derived type / interface.
+
+      CALL TEST11
+
+!             Test the derived type ** interface.
+
+      CALL TEST12
+
+!             Test the derived type functions TO_FM, TO_IM, TO_ZM, ..., TO_QUAD_Z interface.
+
+      CALL TEST13
+
+!             Test the derived type functions ADDI, ..., Z2M interface.
+
+      CALL TEST14
+
+!             Test derived-type array equal assignments.
+
+      CALL TEST15
+      CALL TEST16
+      CALL TEST17
+      CALL TEST18
+      CALL TEST19
+      CALL TEST20
+
+!             Test derived-type array addition operations.
+
+      CALL TEST21
+      CALL TEST22
+      CALL TEST23
+      CALL TEST24
+      CALL TEST25
+      CALL TEST26
+      CALL TEST27
+      CALL TEST28
+      CALL TEST29
+      CALL TEST30
+      CALL TEST31
+      CALL TEST32
+
+!             Test derived-type array subtraction operations.
+
+      CALL TEST33
+      CALL TEST34
+      CALL TEST35
+      CALL TEST36
+      CALL TEST37
+      CALL TEST38
+      CALL TEST39
+      CALL TEST40
+      CALL TEST41
+      CALL TEST42
+      CALL TEST43
+      CALL TEST44
+
+!             Test derived-type array multiplication operations.
+
+      CALL TEST45
+      CALL TEST46
+      CALL TEST47
+      CALL TEST48
+      CALL TEST49
+      CALL TEST50
+      CALL TEST51
+      CALL TEST52
+      CALL TEST53
+      CALL TEST54
+      CALL TEST55
+      CALL TEST56
+
+!             Test derived-type array division operations.
+
+      CALL TEST57
+      CALL TEST58
+      CALL TEST59
+      CALL TEST60
+      CALL TEST61
+      CALL TEST62
+      CALL TEST63
+      CALL TEST64
+      CALL TEST65
+      CALL TEST66
+      CALL TEST67
+      CALL TEST68
+
+!             End of tests.
+
+      CALL CPU_TIME(TIME2)
+
+      IF (NERROR == 0) THEN
+          WRITE (KW, "(///1X,I5,' cases tested.  No errors were found.'/)" ) NCASE
+          WRITE (KLOG, "(///1X,I5,' cases tested.  No errors were found.'/)" ) NCASE
+      ELSE IF (NERROR == 1) THEN
+          WRITE (KW, "(///1X,I5,' cases tested.  1 error was found.'/)" ) NCASE
+          WRITE (KLOG, "(///1X,I5,' cases tested.  1 error was found.'/)" ) NCASE
+      ELSE
+          WRITE (KW, "(///1X,I5,' cases tested.',I4,' errors were found.'/)" ) NCASE,NERROR
+          WRITE (KLOG, "(///1X,I5,' cases tested.',I4,' errors were found.'/)" ) NCASE,NERROR
+      ENDIF
+
+      IF (NERROR >= 1) THEN
+          KWSAVE = KW
+          KW = KLOG
+
+!             Write some of the variables in module FMVALS.
+
+          CALL FPVARS
+          KW = KWSAVE
+      ENDIF
+
+      WRITE (KW,*) ' '
+      WRITE (KW,"(F10.2,A)") TIME2-TIME1,' Seconds for TestFMquadReal.'
+      WRITE (KW,*) ' '
+      WRITE (KLOG,*) ' '
+      WRITE (KLOG,"(F10.2,A)") TIME2-TIME1,' Seconds for TestFMquadReal.'
+      WRITE (KLOG,*) ' '
+
+      WRITE (KW,*)' End of run.'
+
+      STOP
+      END PROGRAM TEST
+
+      SUBROUTINE ERRPRTFM(NROUT,M1,NAME1,M2,NAME2,M3,NAME3)
+
+!  Print error messages for testing of real (FM) routines.
+
+!  M1 is the value to be tested, as computed by the routine named NROUT.
+!  M2 is the reference value, usually converted using FMST2M.
+!  M3 is ABS(M1-M2), and ERRPRT is called if this is too big.
+!  NAME1,NAME2,NAME3 are strings identifying which variables in the calling routine
+!  correspond to M1,M2,M3.
+
+      USE FMVALS
+      USE FMZM
+      USE TEST_VARS
+      IMPLICIT NONE
+
+      TYPE(MULTI) :: M1,M2,M3
+
+      CHARACTER(2) :: NAME1,NAME2,NAME3
+      CHARACTER(6) :: NROUT
+
+      NERROR = NERROR + 1
+      WRITE (KW,  &
+          "(//' Error in case',I5,'.  The routine',' being tested was ',A6)"  &
+          ) NCASE,NROUT
+      WRITE (KLOG,  &
+          "(//' Error in case',I5,'.  The routine',' being tested was ',A6)"  &
+          ) NCASE,NROUT
+
+!             Temporarily change KW to KLOG so FMPRINT will write to the log file.
+
+      KWSAVE = KW
+      KW = KLOG
+      WRITE (KLOG,"(1X,A,' =')") NAME1
+      CALL FMPRINT(M1)
+      WRITE (KLOG,"(1X,A,' =')") NAME2
+      CALL FMPRINT(M2)
+      WRITE (KLOG,"(1X,A,' =')") NAME3
+      CALL FMPRINT(M3)
+      KW = KWSAVE
+      RETURN
+      END SUBROUTINE ERRPRTFM
+
+      SUBROUTINE ERRPRTIM(NROUT,M1,NAME1,M2,NAME2)
+
+!  Print error messages for testing of integer (IM) routines.
+
+!  M1 is the value to be tested, as computed by the routine named NROUT.
+!  M2 is the reference value, usually converted using IMST2M.
+!  NAME1,NAME2 are strings identifying which variables in the calling routine correspond to M1,M2.
+
+      USE FMVALS
+      USE FMZM
+      USE TEST_VARS
+      IMPLICIT NONE
+
+      TYPE(MULTI) :: M1,M2
+
+      CHARACTER(2) :: NAME1,NAME2
+      CHARACTER(6) :: NROUT
+
+      NERROR = NERROR + 1
+      WRITE (KW,  &
+          "(//' Error in case',I5,'.  The routine',' being tested was ',A6)"  &
+          ) NCASE,NROUT
+      WRITE (KLOG,  &
+          "(//' Error in case',I5,'.  The routine',' being tested was ',A6)"  &
+          ) NCASE,NROUT
+
+!             Temporarily change KW to KLOG so IMPRINT will write to the log file.
+
+      KWSAVE = KW
+      KW = KLOG
+      WRITE (KLOG,"(1X,A,' =')") NAME1
+      CALL IMPRINT(M1)
+      WRITE (KLOG,"(1X,A,' =')") NAME2
+      CALL IMPRINT(M2)
+      KW = KWSAVE
+      END SUBROUTINE ERRPRTIM
+
+      SUBROUTINE ERRPRTZM(NROUT,M1,NAME1,M2,NAME2,M3,NAME3)
+
+!  Print error messages.
+
+!  M1 is the value to be tested, as computed by the routine named NROUT.
+!  M2 is the reference value, usually converted using ZMST2M.
+!  M3 is ABS(M1-M2), and ERRPRTZM is called if this is too big.
+!  NAME1,NAME2,NAME3 are strings identifying which variables in the calling routine correspond
+!  to M1,M2,M3.
+
+      USE FMVALS
+      USE FMZM
+      USE TEST_VARS
+      IMPLICIT NONE
+
+      TYPE(MULTI) :: M1(2),M2(2),M3(2)
+
+      CHARACTER(2) :: NAME1,NAME2,NAME3
+      CHARACTER(6) :: NROUT
+
+      NERROR = NERROR + 1
+      WRITE (KW,  &
+          "(//' Error in case',I5,'.  The routine',' being tested was ',A6)"  &
+          ) NCASE,NROUT
+      WRITE (KLOG,  &
+          "(//' Error in case',I5,'.  The routine',' being tested was ',A6)"  &
+          ) NCASE,NROUT
+
+!             Temporarily change KW to KLOG so ZMPRINT will write to the log file.
+
+      KWSAVE = KW
+      KW = KLOG
+      WRITE (KLOG,"(1X,A,' =')") NAME1
+      CALL ZMPRINT(M1)
+      WRITE (KLOG,"(1X,A,' =')") NAME2
+      CALL ZMPRINT(M2)
+      WRITE (KLOG,"(1X,A,' =')") NAME3
+      CALL ZMPRINT(M3)
+      KW = KWSAVE
+      END SUBROUTINE ERRPRTZM
+
+      SUBROUTINE ERRPRT_FM(NROUT,M1,NAME1,M2,NAME2,M3,NAME3)
+
+!  Print error messages for testing of TYPE (FM) interface routines.
+
+!  M1 is the value to be tested, as computed by the routine named NROUT.
+!  M2 is the reference value, usually converted using FMST2M.
+!  M3 is ABS(M1-M2), and ERRPRT_FM is called if this is too big.
+!  NAME1,NAME2,NAME3 are strings identifying which variables in the calling routine correspond
+!  to M1,M2,M3.
+
+      USE FMVALS
+      USE FMZM
+      USE TEST_VARS
+      IMPLICIT NONE
+
+      TYPE (FM) :: M1, M2, M3
+
+      CHARACTER(3) :: NAME1,NAME2,NAME3
+      CHARACTER(6) :: NROUT
+
+      NERROR = NERROR + 1
+      WRITE (KW,  &
+         "(//' Error in case',I5,'.  The interface',' being tested was ',A6)"  &
+         ) NCASE,NROUT
+      WRITE (KLOG,  &
+         "(//' Error in case',I5,'.  The interface',' being tested was ',A6)"  &
+         ) NCASE,NROUT
+
+!             Temporarily change KW to KLOG so FM_PRINT will write to the log file.
+
+      KWSAVE = KW
+      KW = KLOG
+      WRITE (KLOG,"(1X,A,' =')") NAME1
+      CALL FM_PRINT(M1)
+      WRITE (KLOG,"(1X,A,' =')") NAME2
+      CALL FM_PRINT(M2)
+      WRITE (KLOG,"(1X,A,' =')") NAME3
+      CALL FM_PRINT(M3)
+      KW = KWSAVE
+      END SUBROUTINE ERRPRT_FM
+
+      SUBROUTINE ERRPRT_IM(NROUT,M1,NAME1,M2,NAME2)
+
+!  Print error messages for testing of TYPE (IM) interface routines.
+
+!  M1 is the value to be tested, as computed by the routine named NROUT.
+!  M2 is the reference value, usually converted using IMST2M.
+!  NAME1,NAME2 are strings identifying which variables in the calling routine correspond to M1,M2.
+
+      USE FMVALS
+      USE FMZM
+      USE TEST_VARS
+      IMPLICIT NONE
+
+      TYPE (IM) :: M1, M2
+
+      CHARACTER(3) :: NAME1,NAME2
+      CHARACTER(6) :: NROUT
+
+      NERROR = NERROR + 1
+      WRITE (KW,  &
+        "(//' Error in case',I5,'.  The interface',' being tested was ',A6)"  &
+        ) NCASE,NROUT
+      WRITE (KLOG,  &
+        "(//' Error in case',I5,'.  The interface',' being tested was ',A6)"  &
+        ) NCASE,NROUT
+
+!             Temporarily change KW to KLOG so IM_PRINT will write to the log file.
+
+      KWSAVE = KW
+      KW = KLOG
+      WRITE (KLOG,"(1X,A,' =')") NAME1
+      CALL IM_PRINT(M1)
+      WRITE (KLOG,"(1X,A,' =')") NAME2
+      CALL IM_PRINT(M2)
+      KW = KWSAVE
+      END SUBROUTINE ERRPRT_IM
+
+      SUBROUTINE ERRPRT_ZM(NROUT,M1,NAME1,M2,NAME2,M3,NAME3)
+
+!  Print error messages for testing of TYPE (ZM) interface routines.
+
+!  M1 is the value to be tested, as computed by the routine named NROUT.
+!  M2 is the reference value, usually converted using ZMST2M.
+!  M3 is ABS(M1-M2), and ERRPRT_ZM is called if this is too big.
+!  NAME1,NAME2,NAME3 are strings identifying which variables in the calling routine correspond
+!  to M1,M2,M3.
+
+      USE FMVALS
+      USE FMZM
+      USE TEST_VARS
+      IMPLICIT NONE
+
+      TYPE (ZM) :: M1, M2, M3
+
+      CHARACTER(3) :: NAME1,NAME2,NAME3
+      CHARACTER(6) :: NROUT
+
+      NERROR = NERROR + 1
+      WRITE (KW,  &
+        "(//' Error in case',I5,'.  The interface',' being tested was ',A6)"  &
+        ) NCASE,NROUT
+      WRITE (KLOG,  &
+        "(//' Error in case',I5,'.  The interface',' being tested was ',A6)"  &
+        ) NCASE,NROUT
+
+!             Temporarily change KW to KLOG so ZM_PRINT will write to the log file.
+
+      KWSAVE = KW
+      KW = KLOG
+      WRITE (KLOG,"(1X,A,' =')") NAME1
+      CALL ZM_PRINT(M1)
+      WRITE (KLOG,"(1X,A,' =')") NAME2
+      CALL ZM_PRINT(M2)
+      WRITE (KLOG,"(1X,A,' =')") NAME3
+      CALL ZM_PRINT(M3)
+      KW = KWSAVE
+      END SUBROUTINE ERRPRT_ZM
+
+      SUBROUTINE PRTERR(KW2)
+      USE TEST_VARS
+      IMPLICIT NONE
+      INTEGER :: KW2
+
+      WRITE (KW2,*) ' Error in case ',NCASE
+      WRITE (KLOG,*) ' '
+      WRITE (KLOG,*) ' Error in case ',NCASE
+      NERROR = NERROR + 1
+      END SUBROUTINE PRTERR

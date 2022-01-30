@@ -1,0 +1,112 @@
+
+This file extends the FM_User_Manual.txt file for the files that support the FM rational arithmetic
+package.  All of these programs use the 3 basic files discussed there:
+
+1.  FMSAVE.f95        Module for FM internal global variables
+
+2.  FM.f95            Subroutine library for multiple-precision operations
+
+3.  FMZM90.f95        Modules for interfaces and definitions of derived-types
+
+These are the files included for rational arithmetic.
+
+4.  fm_rational.f95          The routines and interfaces for rational operations
+
+5.  TestFMrational.f95       Test program for the FM rational routines
+
+6.  SampleFMrational.f95     Small sample program using fm_rational
+
+
+After the first 3 files have been compiled and the program TestFM.f95 has been compiled and run
+to verify the basic FM package has been installed successfully, as shown in FM_User_Manual.txt,
+files 4 through 6 can be compiled and run.
+
+The rational arithmetic operations are made available in the user's program by putting
+       USE FM_RATIONAL_ARITHMETIC
+at the top of routines using rational arithmetic, and the multiple precision rational variables
+are declared as
+       TYPE (FM_RATIONAL)
+
+Here are sample commands to run the programs in files 5, and 6.  These are for the gfortran
+compiler on a Windows PC.  Macs are very similar, as are other compilers.  See FM_User_Manual.txt.
+
+
+    gfortran fm_rational.f95  -c -O3
+
+
+    gfortran TestFMrational.f95  -c -O3
+
+    gfortran  fmsave.o  FM.o  FMZM90.o  fm_rational.o  TestFMrational.o  -o TestFMrational.exe
+
+    ./TestFMrational
+
+
+    gfortran SampleFMrational.f95  -c -O3
+
+    gfortran  fmsave.o  FM.o  FMZM90.o  fm_rational.o  SampleFMrational.o  -o SampleFMrational.exe
+
+    ./SampleFMrational
+
+
+TestFMrational is a program that tests all the rational operations defined in the FM rational
+arithmetic package.  Run it first to make sure that the rational package has been successfully
+installed.  At the end of the run, it should say:
+
+  499 cases tested.  No errors were found.
+
+
+SampleFMrational is a small program showing how to do some rational calculations.  It finds all
+the rational roots for a polynomial, then does several examples involving solution of linear
+systems or computation of inverse matrices.
+
+Since problems involving matrices with exact integer or rational entries are common, subroutines
+for solving linear systems and finding inverse matrices are included in the basic rational package.
+
+SampleFMrational compares the exact rational results with 50-digit approximations from the
+corresponding FM arithmetic routines.
+
+Timing comparisons show that for the common case of a linear system with fairly small integer
+coefficients, the exact rational solution can be found faster than the 50-digit FM solution.
+
+The results are saved in the file SampleFMinterval.out.
+
+
+The basic arithmetic operations are provided, along with assignments and logical comparisons.
+The functions provided are ones where the function value is an exact rational for all rational
+input values.  Here are the functions that are available for the FM_RATIONAL type variables:
+
+ABS
+CEILING
+DIM
+DOT_PRODUCT
+FLOOR
+INT
+IS_UNKNOWN
+MATMUL
+MAX
+MAXLOC
+MAXVAL
+MIN
+MINLOC
+MINVAL
+MOD
+MODULO
+NINT
+PRODUCT
+RATIONAL_APPROX
+RATIONAL_NUMERATOR
+RATIONAL_DENOMINATOR
+SUM
+TO_FM
+TO_FM_RATIONAL
+TO_IM
+TO_ZM
+TRANSPOSE
+
+
+These are the linear algebra routines in this file (see the documentation at
+the top of each routine for explanation of each of the arguments to the routines).
+
+SUBROUTINE RM_LIN_SOLVE(A,X,B,N,DET)           Solve a real NxN linear system of equations.
+
+SUBROUTINE RM_INVERSE(A,N,B,DET)               Inverse matrix for a real NxN matrix
